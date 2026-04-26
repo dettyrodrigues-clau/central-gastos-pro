@@ -507,7 +507,10 @@ const TransactionsView = ({ transactions, categories, accounts, onSave, onDelete
           })}
         </div>
       </Card>
-      <TransactionModal data={modal} categories={categories} accounts={accounts} onClose={() => setModal(null)} onSave={(t) => { onSave(t); setModal(null); }} />
+      <TransactionModal data={modal} categories={categories} accounts={accounts} onClose={() => setModal(null)} onSave={(t) => {
+          if (Array.isArray(t)) { t.forEach(tx => onSave(tx)); } else { onSave(t); }
+          setModal(null);
+        }} />
     </div>
   );
 };
@@ -515,22 +518,85 @@ const TransactionsView = ({ transactions, categories, accounts, onSave, onDelete
 const TransactionModal = ({ data, categories, accounts, onClose, onSave }) => {
   const [form, setForm] = useState(data || null);
   const [suggestion, setSuggestion] = useState(null);
-  useEffect(() => { setForm(data); setSuggestion(null); }, [data]);
+  const [recurrence, setRecurrence] = useState('once'); // 'once' | 'installment' | 'monthly'
+  const [installments, setInstallments] = useState('12');
+  const [months, setMonths] = useState('12');
+
+  useEffect(() => { setForm(data); setSuggestion(null); setRecurrence('once'); setInstallments('12'); setMonths('12'); }, [data]);
   if (!form) return null;
+
   const availableCats = categories.filter(c => c.type === 'both' || c.type === form.type);
   const onDescriptionBlur = () => { if (!form.category_id && form.description) { const s = suggestCategory(form.description, availableCats); if (s) setSuggestion(s); } };
   const acceptSuggestion = () => { setForm({ ...form, category_id: suggestion.id }); setSuggestion(null); };
+
+  const addMonths = (dateStr, n) => {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setMonth(d.getMonth() + n);
+    return d.toISOString().slice(0, 10);
+  };
+
   const submit = (e) => {
     e.preventDefault();
     const parsed = parseMoney(form.amount);
     if (!parsed || parsed <= 0) return alert('Informe um valor válido.');
     if (!form.category_id) return alert('Selecione uma categoria.');
     if (!form.account_id) return alert('Selecione uma conta.');
-    onSave({ ...form, amount: parsed });
+
+    // Lançamento único
+    if (recurrence === 'once' || form.id) {
+      onSave({ ...form, amount: parsed });
+      return;
+    }
+
+    // Parcelado
+    if (recurrence === 'installment') {
+      const n = Math.max(1, Math.min(48, parseInt(installments) || 12));
+      const txs = Array.from({ length: n }, (_, i) => ({
+        ...form,
+        amount: parsed,
+        date: addMonths(form.date, i),
+        description: `${form.description || ''} (${i + 1}/${n})`.trim(),
+      }));
+      onSave(txs);
+      return;
+    }
+
+    // Fixo mensal
+    if (recurrence === 'monthly') {
+      const n = Math.max(1, Math.min(36, parseInt(months) || 12));
+      const txs = Array.from({ length: n }, (_, i) => ({
+        ...form,
+        amount: parsed,
+        date: addMonths(form.date, i),
+      }));
+      onSave(txs);
+    }
   };
+
+  const recOptions = [
+    { id: 'once', label: '1x', emoji: '💳', desc: 'Único' },
+    { id: 'installment', label: 'Parcelas', emoji: '📅', desc: 'Parcelado' },
+    { id: 'monthly', label: 'Fixo', emoji: '🔁', desc: 'Mensal' },
+  ];
+
+  const totalLabel = () => {
+    const parsed = parseMoney(form.amount);
+    if (!parsed) return null;
+    if (recurrence === 'installment') {
+      const n = parseInt(installments) || 12;
+      return `${n}x de ${brl(parsed)} = ${brl(parsed * n)} total`;
+    }
+    if (recurrence === 'monthly') {
+      const n = parseInt(months) || 12;
+      return `${n} meses × ${brl(parsed)} = ${brl(parsed * n)} total`;
+    }
+    return null;
+  };
+
   return (
     <Modal open={!!form} onClose={onClose} title={form.id ? 'Editar lançamento' : 'Novo lançamento'} size="md">
       <form onSubmit={submit} className="space-y-4">
+        {/* Entrada / Saída */}
         <div className="grid grid-cols-2 gap-2">
           {[{ type: 'income', label: 'Entrada', icon: ArrowUpCircle, a: 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' }, { type: 'expense', label: 'Saída', icon: ArrowDownCircle, a: 'border-red-500 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400' }].map(opt => (
             <button key={opt.type} type="button" onClick={() => setForm({ ...form, type: opt.type, category_id: '' })}
@@ -539,19 +605,27 @@ const TransactionModal = ({ data, categories, accounts, onClose, onSave }) => {
             </button>
           ))}
         </div>
+
+        {/* Valor + Data */}
         <div className="grid grid-cols-2 gap-3">
           <Input label="Valor (R$)" type="text" inputMode="decimal" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value.replace(/[^0-9,\.]/g, '') })} onBlur={e => setForm({ ...form, amount: parseMoney(e.target.value) })} placeholder="0,00" />
-          <Input label="Data" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
+          <Input label={recurrence === 'installment' ? '1ª parcela' : recurrence === 'monthly' ? 'Início' : 'Data'} type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
         </div>
+
+        {/* Descrição */}
         <div>
           <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 mb-2 uppercase tracking-wider">Descrição</label>
           <input className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} onBlur={onDescriptionBlur} placeholder="ex: Mercado, Uber, Salário..." />
           {suggestion && <button type="button" onClick={acceptSuggestion} className="mt-2 w-full flex items-center gap-2 p-3 rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 text-purple-700 dark:text-purple-300 text-sm"><Sparkles className="w-4 h-4 shrink-0" /><span>Sugestão: <b>{suggestion.name}</b></span><Check className="w-4 h-4 ml-auto" /></button>}
         </div>
+
+        {/* Categoria */}
         <Select label="Categoria" value={form.category_id} onChange={e => setForm({ ...form, category_id: e.target.value })}>
           <option value="">Selecionar categoria...</option>
           {availableCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </Select>
+
+        {/* Conta + Pagamento */}
         <div className="grid grid-cols-2 gap-3">
           <Select label="Conta" value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })}>
             <option value="">Selecionar...</option>
@@ -561,9 +635,58 @@ const TransactionModal = ({ data, categories, accounts, onClose, onSave }) => {
             <option>Dinheiro</option><option>Pix</option><option>Débito</option><option>Cartão</option><option>Transferência</option><option>Boleto</option>
           </Select>
         </div>
+
+        {/* 🆕 Recorrência / Parcelamento */}
+        {!form.id && (
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50 dark:bg-zinc-800/50">
+            <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 mb-3 uppercase tracking-wider">Tipo de lançamento</label>
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              {recOptions.map(opt => (
+                <button key={opt.id} type="button" onClick={() => setRecurrence(opt.id)}
+                  className={`p-2.5 rounded-2xl border-2 text-center transition-all ${recurrence === opt.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/15' : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300'}`}>
+                  <div className="text-lg mb-0.5">{opt.emoji}</div>
+                  <div className={`text-xs font-bold ${recurrence === opt.id ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-500'}`}>{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+
+            {recurrence === 'installment' && (
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 mb-1.5">Número de parcelas</label>
+                <div className="flex items-center gap-2">
+                  <input type="number" min="2" max="48" value={installments}
+                    onChange={e => setInstallments(e.target.value)}
+                    className="w-20 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-center font-bold focus:border-emerald-500 focus:outline-none" />
+                  <span className="text-sm text-zinc-500">vezes</span>
+                </div>
+              </div>
+            )}
+
+            {recurrence === 'monthly' && (
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 mb-1.5">Repetir por quantos meses?</label>
+                <div className="flex items-center gap-2">
+                  <input type="number" min="1" max="36" value={months}
+                    onChange={e => setMonths(e.target.value)}
+                    className="w-20 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-center font-bold focus:border-emerald-500 focus:outline-none" />
+                  <span className="text-sm text-zinc-500">meses</span>
+                </div>
+              </div>
+            )}
+
+            {totalLabel() && (
+              <div className="mt-3 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">📊 {totalLabel()}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex gap-2 pt-2">
           <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" className="flex-1">{form.id ? 'Salvar' : 'Adicionar'}</Button>
+          <Button type="submit" className="flex-1">
+            {form.id ? 'Salvar' : recurrence === 'installment' ? `Criar ${installments} parcelas` : recurrence === 'monthly' ? `Criar ${months} meses` : 'Adicionar'}
+          </Button>
         </div>
       </form>
     </Modal>
