@@ -6,7 +6,7 @@ import {
   ArrowUpCircle, ArrowDownCircle, Utensils, Car, Building, Briefcase,
   Fuel, MoreHorizontal, Smartphone, Banknote, ArrowRightLeft, FileText,
   Sparkles, Users, Ban, CheckCircle2, ArrowLeft, Check, Bell,
-  PiggyBank, Target, Loader2
+  PiggyBank, Target, Loader2, ChevronRight, Zap
 } from 'lucide-react';
 import {
   BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis,
@@ -65,7 +65,12 @@ const suggestCategory = (description, categories) => {
 };
 
 const useTheme = () => {
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
   useEffect(() => {
     const root = document.documentElement;
     if (dark) root.classList.add('dark'); else root.classList.remove('dark');
@@ -74,46 +79,46 @@ const useTheme = () => {
 };
 
 // =====================================================
-// UI KIT
+// UI KIT PREMIUM
 // =====================================================
 const Button = ({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
-  const base = 'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed';
+  const base = 'inline-flex items-center justify-center gap-2 font-semibold rounded-2xl transition-all duration-200 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed select-none';
   const variants = {
-    primary:   'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20',
-    secondary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20',
-    ghost:     'bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200',
-    outline:   'border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-700 dark:text-slate-200',
-    danger:    'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-600/20',
+    primary:   'bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5',
+    secondary: 'bg-blue-500 hover:bg-blue-400 text-white shadow-lg shadow-blue-500/25 hover:-translate-y-0.5',
+    ghost:     'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200',
+    outline:   'border border-zinc-200 dark:border-zinc-700 hover:border-emerald-400 dark:hover:border-emerald-500 text-zinc-700 dark:text-zinc-200 bg-white dark:bg-zinc-800/50',
+    danger:    'bg-red-500 hover:bg-red-400 text-white shadow-lg shadow-red-500/25',
   };
-  const sizes = { sm: 'px-3 py-1.5 text-sm', md: 'px-4 py-2.5 text-sm', lg: 'px-6 py-3 text-base' };
+  const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2.5 text-sm', lg: 'px-6 py-3.5 text-base' };
   return <button className={`${base} ${variants[variant]} ${sizes[size]} ${className}`} {...props}>{children}</button>;
 };
 
 const Card = ({ children, className = '' }) => (
-  <div className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 ${className}`}>
+  <div className={`bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 ${className}`}>
     {children}
   </div>
 );
 
 const Input = ({ label, icon: Icon, error, className = '', ...props }) => (
   <div className="w-full">
-    {label && <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{label}</label>}
+    {label && <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 mb-2 uppercase tracking-wider">{label}</label>}
     <div className="relative">
-      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />}
+      {Icon && <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />}
       <input
-        className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-2.5 rounded-xl border-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none transition ${error ? 'border-red-400' : 'border-slate-200 dark:border-slate-700'} ${className}`}
+        className={`w-full ${Icon ? 'pl-11' : 'pl-4'} pr-4 py-3 rounded-2xl border bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none transition-all ${error ? 'border-red-400 focus:border-red-400 focus:ring-2 focus:ring-red-400/20' : 'border-zinc-200 dark:border-zinc-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20'} ${className}`}
         {...props}
       />
     </div>
-    {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    {error && <p className="text-xs text-red-500 mt-1.5">{error}</p>}
   </div>
 );
 
 const Select = ({ label, children, className = '', ...props }) => (
   <div className="w-full">
-    {label && <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{label}</label>}
+    {label && <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 mb-2 uppercase tracking-wider">{label}</label>}
     <select
-      className={`w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none ${className}`}
+      className={`w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all ${className}`}
       {...props}
     >
       {children}
@@ -125,67 +130,102 @@ const Modal = ({ open, onClose, title, children, size = 'md' }) => {
   if (!open) return null;
   const sizes = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-2xl' };
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div
-        className={`bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl w-full ${sizes[size]} max-h-[92vh] overflow-y-auto shadow-2xl`}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-            <X className="w-5 h-5 text-slate-500" />
-          </button>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className={`bg-white dark:bg-zinc-900 rounded-t-[2rem] sm:rounded-3xl w-full ${sizes[size]} max-h-[92vh] overflow-y-auto shadow-2xl border border-zinc-100 dark:border-zinc-800`} onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800 sticky top-0 bg-white dark:bg-zinc-900 z-10 rounded-t-[2rem] sm:rounded-t-3xl">
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-white">{title}</h3>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"><X className="w-4 h-4 text-zinc-500" /></button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="px-6 py-5">{children}</div>
       </div>
     </div>
   );
 };
 
-const Badge = ({ children, color = 'slate' }) => {
+const Badge = ({ children, color = 'zinc' }) => {
   const map = {
-    emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    blue:    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    red:     'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    amber:   'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    slate:   'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+    emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400',
+    blue:    'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400',
+    red:     'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400',
+    amber:   'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
+    zinc:    'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+    purple:  'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400',
   };
-  return <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${map[color]}`}>{children}</span>;
+  return <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${map[color]}`}>{children}</span>;
 };
 
 const EmptyState = ({ icon: Icon, title, description, action }) => (
-  <div className="text-center py-12">
-    <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center">
-      <Icon className="w-8 h-8 text-slate-400" />
+  <div className="text-center py-16 px-4">
+    <div className="w-14 h-14 mx-auto mb-4 bg-zinc-100 dark:bg-zinc-800 rounded-3xl flex items-center justify-center">
+      <Icon className="w-7 h-7 text-zinc-400" />
     </div>
-    <h3 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
-    <p className="text-sm text-slate-500 mt-1 mb-4">{description}</p>
+    <h3 className="text-base font-bold text-zinc-900 dark:text-white">{title}</h3>
+    <p className="text-sm text-zinc-400 mt-1 mb-5">{description}</p>
     {action}
   </div>
 );
 
 const StatCard = ({ title, value, icon: Icon, color, subtitle }) => {
   const colors = {
-    emerald: 'from-emerald-500 to-emerald-600 shadow-emerald-500/30',
-    blue:    'from-blue-500 to-blue-600 shadow-blue-500/30',
-    red:     'from-red-500 to-rose-600 shadow-red-500/30',
-    slate:   'from-slate-700 to-slate-900 shadow-slate-900/30',
+    emerald: { bg: 'bg-emerald-500', shadow: 'shadow-emerald-500/20', light: 'bg-emerald-50 dark:bg-emerald-500/10' },
+    blue:    { bg: 'bg-blue-500',    shadow: 'shadow-blue-500/20',    light: 'bg-blue-50 dark:bg-blue-500/10' },
+    red:     { bg: 'bg-red-500',     shadow: 'shadow-red-500/20',     light: 'bg-red-50 dark:bg-red-500/10' },
+    zinc:    { bg: 'bg-zinc-600 dark:bg-zinc-500', shadow: 'shadow-zinc-500/10', light: 'bg-zinc-100 dark:bg-zinc-800' },
   };
+  const c = colors[color] || colors.zinc;
   return (
-    <Card className="p-5 relative overflow-hidden">
-      <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-2xl bg-gradient-to-br ${colors[color]} opacity-10`} />
-      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colors[color]} shadow-lg flex items-center justify-center mb-3`}>
+    <Card className="p-5 relative overflow-hidden group hover:scale-[1.02] transition-transform duration-200 cursor-default">
+      <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full ${c.light} group-hover:scale-125 transition-transform duration-300`} />
+      <div className={`w-10 h-10 rounded-2xl ${c.bg} shadow-lg ${c.shadow} flex items-center justify-center mb-4 relative z-10`}>
         <Icon className="w-5 h-5 text-white" />
       </div>
-      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{title}</p>
-      <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{value}</p>
-      {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+      <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1 relative z-10">{title}</p>
+      <p className="text-xl font-black text-zinc-900 dark:text-white tabular-nums relative z-10">{value}</p>
+      {subtitle && <p className="text-xs text-zinc-400 mt-0.5 relative z-10">{subtitle}</p>}
     </Card>
   );
 };
 
+const HeroBalanceCard = ({ balance, income, expense, name }) => (
+  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-400 p-6 text-white shadow-2xl shadow-emerald-500/30">
+    <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-white/10 pointer-events-none" />
+    <div className="absolute right-4 bottom-4 w-24 h-24 rounded-full bg-black/5 pointer-events-none" />
+    <div className="relative z-10">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <Wallet className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-white/80 text-sm font-medium">Saldo total</span>
+        </div>
+        <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+          <Zap className="w-3 h-3" /><span className="text-xs font-bold">PRO</span>
+        </div>
+      </div>
+      <p className="text-4xl font-black tabular-nums tracking-tight mb-1">{brl(balance)}</p>
+      <p className="text-white/70 text-sm mb-5">Olá, {(name || 'usuário').split(' ')[0]}! 👋</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <ArrowUpCircle className="w-3.5 h-3.5 text-white/80" />
+            <span className="text-white/70 text-xs font-medium">Entradas</span>
+          </div>
+          <p className="text-white font-bold tabular-nums text-sm">{brl(income)}</p>
+        </div>
+        <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <ArrowDownCircle className="w-3.5 h-3.5 text-white/80" />
+            <span className="text-white/70 text-xs font-medium">Saídas</span>
+          </div>
+          <p className="text-white font-bold tabular-nums text-sm">{brl(expense)}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 // =====================================================
-// TELA DE LOGIN / CADASTRO
+// AUTH
 // =====================================================
 const AuthScreen = ({ onLogin, onRegister, onReset }) => {
   const [mode, setMode] = useState('login');
@@ -210,65 +250,57 @@ const AuthScreen = ({ onLogin, onRegister, onReset }) => {
         const { error } = await onReset(form.email);
         if (error) setError(error.message); else setInfo('Se o e-mail existir, você receberá instruções de recuperação.');
       }
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden">
+      <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
+      <div className="w-full max-w-sm relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-xl shadow-emerald-500/30">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center shadow-2xl shadow-emerald-500/30">
               <Wallet className="w-7 h-7 text-white" />
             </div>
             <div className="text-left">
-              <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Central de Gastos</h1>
-              <p className="text-xs font-bold text-emerald-600 tracking-widest">PRO</p>
+              <h1 className="text-2xl font-black text-zinc-900 dark:text-white leading-tight">Central de<br />Gastos</h1>
+              <div className="flex items-center gap-1 mt-0.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <p className="text-xs font-bold text-emerald-500 tracking-widest">PRO</p>
+              </div>
             </div>
           </div>
-          <p className="text-sm text-slate-500">Controle financeiro profissional na palma da mão</p>
+          <p className="text-sm text-zinc-500">Controle financeiro inteligente</p>
         </div>
-
-        <Card className="p-6 shadow-2xl shadow-slate-200/40 dark:shadow-black/40">
-          <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6">
-            <button onClick={() => { setMode('login'); setError(''); setInfo(''); }} className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${mode === 'login' ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow' : 'text-slate-500'}`}>Entrar</button>
-            <button onClick={() => { setMode('register'); setError(''); setInfo(''); }} className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${mode === 'register' ? 'bg-white dark:bg-slate-900 text-emerald-600 shadow' : 'text-slate-500'}`}>Criar conta</button>
+        <Card className="p-6 shadow-xl shadow-zinc-200/50 dark:shadow-black/30">
+          <div className="flex gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl mb-6">
+            {['login', 'register'].map(m => (
+              <button key={m} onClick={() => { setMode(m); setError(''); setInfo(''); }}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${mode === m ? 'bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}>
+                {m === 'login' ? 'Entrar' : 'Criar conta'}
+              </button>
+            ))}
           </div>
-
           <form onSubmit={submit} className="space-y-4">
-            {mode === 'register' && (
-              <Input label="Nome completo" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Seu nome" />
-            )}
+            {mode === 'register' && <Input label="Nome completo" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Seu nome" />}
             <Input label="E-mail" icon={Mail} type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="voce@email.com" required />
             {mode !== 'forgot' && (
               <div className="relative">
-                <Input label="Senha" icon={Lock} type={showPwd ? 'text' : 'password'} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="••••••" required />
-                <button type="button" onClick={() => setShowPwd(s => !s)} className="absolute right-3 top-[38px] p-1 text-slate-400 hover:text-slate-600">
+                <Input label="Senha" icon={Lock} type={showPwd ? 'text' : 'password'} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="••••••••" required />
+                <button type="button" onClick={() => setShowPwd(s => !s)} className="absolute right-3.5 top-[38px] p-1 text-zinc-400 hover:text-zinc-600 transition-colors">
                   {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             )}
-
-            {error && <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm"><Ban className="w-4 h-4 mt-0.5 shrink-0" />{error}</div>}
-            {info &&  <div className="flex items-start gap-2 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm"><Bell className="w-4 h-4 mt-0.5 shrink-0" />{info}</div>}
-
-            <Button type="submit" size="lg" className="w-full" disabled={loading}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {mode === 'login' ? 'Entrar' : mode === 'register' ? 'Criar conta grátis' : 'Enviar link de recuperação'}
+            {error && <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400 text-sm"><Ban className="w-4 h-4 mt-0.5 shrink-0" />{error}</div>}
+            {info && <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm"><Check className="w-4 h-4 mt-0.5 shrink-0" />{info}</div>}
+            <Button type="submit" size="lg" className="w-full mt-2" disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+              {mode === 'login' ? 'Entrar na conta' : mode === 'register' ? 'Criar conta grátis' : 'Enviar link'}
             </Button>
-
-            {mode === 'login' && (
-              <button type="button" onClick={() => { setMode('forgot'); setError(''); setInfo(''); }} className="w-full text-center text-sm text-emerald-600 hover:underline">
-                Esqueci minha senha
-              </button>
-            )}
-            {mode === 'forgot' && (
-              <button type="button" onClick={() => { setMode('login'); setError(''); setInfo(''); }} className="w-full text-center text-sm text-slate-500 hover:underline flex items-center justify-center gap-1">
-                <ArrowLeft className="w-3 h-3" /> Voltar para o login
-              </button>
-            )}
+            {mode === 'login' && <button type="button" onClick={() => { setMode('forgot'); setError(''); setInfo(''); }} className="w-full text-center text-sm text-emerald-600 dark:text-emerald-400 hover:underline">Esqueci minha senha</button>}
+            {mode === 'forgot' && <button type="button" onClick={() => { setMode('login'); setError(''); setInfo(''); }} className="w-full text-center text-sm text-zinc-500 hover:underline flex items-center justify-center gap-1"><ArrowLeft className="w-3.5 h-3.5" /> Voltar para o login</button>}
           </form>
         </Card>
       </div>
@@ -282,7 +314,6 @@ const AuthScreen = ({ onLogin, onRegister, onReset }) => {
 const Dashboard = ({ transactions, accounts, categories, profile, setView }) => {
   const now = new Date();
   const thisMonth = monthKey(now);
-
   const monthTx = transactions.filter(t => monthKey(t.date) === thisMonth);
   const income = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + +t.amount, 0);
   const expense = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0);
@@ -295,143 +326,113 @@ const Dashboard = ({ transactions, accounts, categories, profile, setView }) => 
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const k = monthKey(d);
       const tx = transactions.filter(t => monthKey(t.date) === k);
-      data.push({
-        month: monthLabel(k),
-        entradas: tx.filter(t => t.type === 'income').reduce((s, t) => s + +t.amount, 0),
-        saidas:   tx.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0),
-      });
+      data.push({ month: monthLabel(k), entradas: tx.filter(t => t.type === 'income').reduce((s, t) => s + +t.amount, 0), saidas: tx.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0) });
     }
     return data;
   }, [transactions]);
 
-  const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
-  const weekTx = transactions.filter(t => new Date(t.date + 'T00:00:00') >= weekAgo);
-  const weekIncome  = weekTx.filter(t => t.type === 'income').reduce((s, t) => s + +t.amount, 0);
-  const weekExpense = weekTx.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0);
-
-  const byCategory = categories.map(c => ({
-    ...c,
-    total: monthTx.filter(t => t.type === 'expense' && t.category_id === c.id).reduce((s, t) => s + +t.amount, 0)
-  })).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
-
+  const byCategory = categories.map(c => ({ ...c, total: monthTx.filter(t => t.type === 'expense' && t.category_id === c.id).reduce((s, t) => s + +t.amount, 0) })).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
   const topCat = byCategory[0];
-  const smartInsight = topCat
-    ? `Você gastou mais com ${topCat.name.toLowerCase()} este mês (${brl(topCat.total)}).`
-    : 'Cadastre seus primeiros lançamentos para ver insights inteligentes.';
-
+  const smartInsight = topCat ? `Você gastou mais com ${topCat.name.toLowerCase()} este mês (${brl(topCat.total)}).` : 'Cadastre seus primeiros lançamentos para ver insights.';
   const recent = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white">Olá, {(profile?.name || 'usuário').split(' ')[0]} 👋</h2>
-        <p className="text-sm text-slate-500">Aqui está o resumo das suas finanças</p>
+    <div className="space-y-4">
+      <HeroBalanceCard balance={balance} income={income} expense={expense} name={profile?.name} />
+
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard title="Resultado" value={brl(result)} icon={result >= 0 ? TrendingUp : TrendingDown} color={result >= 0 ? 'emerald' : 'red'} subtitle="este mês" />
+        <StatCard title="Lançamentos" value={monthTx.length} icon={FileText} color="blue" subtitle="este mês" />
       </div>
 
-      <Card className="p-4 bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 border-emerald-200 dark:border-emerald-900/40">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4 text-white" />
+      <Card className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Resumo inteligente</p>
-            <p className="text-sm text-slate-700 dark:text-slate-200 mt-0.5">{smartInsight}</p>
+            <p className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-0.5">Insight do mês</p>
+            <p className="text-sm text-zinc-700 dark:text-zinc-300">{smartInsight}</p>
           </div>
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard title="Saldo total"  value={brl(balance)} icon={Wallet}        color="slate" />
-        <StatCard title="Entradas"     value={brl(income)}  icon={TrendingUp}    color="emerald" subtitle="este mês" />
-        <StatCard title="Saídas"       value={brl(expense)} icon={TrendingDown}  color="red"     subtitle="este mês" />
-        <StatCard title="Resultado"    value={brl(result)}  icon={result >= 0 ? ArrowUpCircle : ArrowDownCircle} color={result >= 0 ? 'emerald' : 'red'} subtitle="este mês" />
-      </div>
-
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="font-bold text-slate-900 dark:text-white">Evolução mensal</h3>
-            <p className="text-xs text-slate-500">Últimos 6 meses</p>
-          </div>
-          <Badge color="emerald">Entradas vs Saídas</Badge>
+          <div><h3 className="font-bold text-zinc-900 dark:text-white">Evolução mensal</h3><p className="text-xs text-zinc-400 mt-0.5">Últimos 6 meses</p></div>
+          <Badge color="emerald">6 meses</Badge>
         </div>
-        <ResponsiveContainer width="100%" height={240}>
-          <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+        <ResponsiveContainer width="100%" height={200}>
+          <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
             <defs>
-              <linearGradient id="gEnt" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="gSai" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-              </linearGradient>
+              <linearGradient id="gEnt2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10b981" stopOpacity={0.3} /><stop offset="95%" stopColor="#10b981" stopOpacity={0} /></linearGradient>
+              <linearGradient id="gSai2" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} /><stop offset="95%" stopColor="#ef4444" stopOpacity={0} /></linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.4} />
-            <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#94a3b8" />
-            <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" />
-            <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} formatter={(v) => brl(v)} />
-            <Area type="monotone" dataKey="entradas" stroke="#10b981" strokeWidth={2.5} fill="url(#gEnt)" name="Entradas" />
-            <Area type="monotone" dataKey="saidas"   stroke="#ef4444" strokeWidth={2.5} fill="url(#gSai)" name="Saídas" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" opacity={0.3} />
+            <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
+            <Tooltip contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }} formatter={(v) => [brl(v)]} />
+            <Area type="monotone" dataKey="entradas" stroke="#10b981" strokeWidth={2} fill="url(#gEnt2)" name="Entradas" dot={false} />
+            <Area type="monotone" dataKey="saidas" stroke="#ef4444" strokeWidth={2} fill="url(#gSai2)" name="Saídas" dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {byCategory.length > 0 && (
         <Card className="p-5">
-          <h3 className="font-bold text-slate-900 dark:text-white mb-3">Resumo da semana</h3>
+          <h3 className="font-bold text-zinc-900 dark:text-white mb-4">Top categorias</h3>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
-              <div className="flex items-center gap-2">
-                <ArrowUpCircle className="w-5 h-5 text-emerald-600" />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Entradas</span>
-              </div>
-              <span className="font-bold text-emerald-700 dark:text-emerald-400">{brl(weekIncome)}</span>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-red-50 dark:bg-red-900/20">
-              <div className="flex items-center gap-2">
-                <ArrowDownCircle className="w-5 h-5 text-red-600" />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Saídas</span>
-              </div>
-              <span className="font-bold text-red-700 dark:text-red-400">{brl(weekExpense)}</span>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700">
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-200">Saldo</span>
-              <span className={`font-black ${weekIncome - weekExpense >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                {brl(weekIncome - weekExpense)}
-              </span>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-slate-900 dark:text-white">Lançamentos recentes</h3>
-            <button onClick={() => setView('transactions')} className="text-xs font-semibold text-emerald-600 hover:underline">Ver todos</button>
-          </div>
-          <div className="space-y-2">
-            {recent.length === 0 && <p className="text-sm text-slate-500 text-center py-6">Nenhum lançamento ainda.</p>}
-            {recent.map(t => {
-              const cat = categories.find(c => c.id === t.category_id);
-              const Icon = cat ? (CAT_ICONS[cat.icon] || Tag) : Tag;
+            {byCategory.slice(0, 4).map((c) => {
+              const pct = expense > 0 ? (c.total / expense) * 100 : 0;
+              const Icon = CAT_ICONS[c.icon] || Tag;
               return (
-                <div key={t.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: (cat?.color || '#94a3b8') + '20' }}>
-                    <Icon className="w-4 h-4" style={{ color: cat?.color || '#94a3b8' }} />
+                <div key={c.id}>
+                  <div className="flex items-center gap-3 mb-1.5">
+                    <div className="w-7 h-7 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: c.color + '20' }}>
+                      <Icon className="w-3.5 h-3.5" style={{ color: c.color }} />
+                    </div>
+                    <div className="flex-1 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{c.name}</span>
+                      <span className="text-xs font-bold text-zinc-400 tabular-nums">{brl(c.total)}</span>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{t.description || cat?.name || 'Sem descrição'}</p>
-                    <p className="text-xs text-slate-500">{fmtDate(t.date)} · {cat?.name}</p>
+                  <div className="h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden ml-10">
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: c.color }} />
                   </div>
-                  <span className={`font-bold text-sm ${t.type === 'income' ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {t.type === 'income' ? '+' : '−'} {brl(t.amount)}
-                  </span>
                 </div>
               );
             })}
           </div>
         </Card>
-      </div>
+      )}
+
+      <Card className="overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800">
+          <h3 className="font-bold text-zinc-900 dark:text-white">Recentes</h3>
+          <button onClick={() => setView('transactions')} className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">Ver todos <ChevronRight className="w-3.5 h-3.5" /></button>
+        </div>
+        <div className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+          {recent.length === 0 && <div className="py-10 text-center text-sm text-zinc-400">Nenhum lançamento ainda.</div>}
+          {recent.map(t => {
+            const cat = categories.find(c => c.id === t.category_id);
+            const Icon = cat ? (CAT_ICONS[cat.icon] || Tag) : Tag;
+            return (
+              <div key={t.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: (cat?.color || '#a1a1aa') + '20' }}>
+                  <Icon className="w-5 h-5" style={{ color: cat?.color || '#a1a1aa' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">{t.description || cat?.name || 'Sem descrição'}</p>
+                  <p className="text-xs text-zinc-400">{fmtDate(t.date)}</p>
+                </div>
+                <span className={`font-bold text-sm tabular-nums ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                  {t.type === 'income' ? '+' : '−'}{brl(t.amount)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
     </div>
   );
 };
@@ -454,26 +455,17 @@ const TransactionsView = ({ transactions, categories, accounts, onSave, onDelete
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Lançamentos</h2>
-          <p className="text-sm text-slate-500">{filtered.length} registro{filtered.length !== 1 ? 's' : ''}</p>
-        </div>
-        <Button onClick={() => {
-          if (!canAdd) return alert('Limite do plano Grátis atingido (100 lançamentos/mês). Faça upgrade!');
-          setModal({ type: 'expense', amount: '', date: new Date().toISOString().slice(0, 10), category_id: '', account_id: accounts[0]?.id || '', payment: 'Dinheiro', description: '', attachment: '' });
-        }}>
+      <div className="flex items-center justify-between gap-3">
+        <div><h2 className="text-2xl font-black text-zinc-900 dark:text-white">Lançamentos</h2><p className="text-sm text-zinc-400">{filtered.length} registro{filtered.length !== 1 ? 's' : ''}</p></div>
+        <Button onClick={() => { if (!canAdd) return alert('Limite atingido!'); setModal({ type: 'expense', amount: '', date: new Date().toISOString().slice(0, 10), category_id: '', account_id: accounts[0]?.id || '', payment: 'Dinheiro', description: '' }); }}>
           <Plus className="w-4 h-4" /> Novo
         </Button>
       </div>
-
       <Card className="p-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Input icon={Search} placeholder="Buscar descrição..." value={search} onChange={e => setSearch(e.target.value)} />
+          <Input icon={Search} placeholder="Buscar..." value={search} onChange={e => setSearch(e.target.value)} />
           <Select value={filterType} onChange={e => setFilterType(e.target.value)}>
-            <option value="all">Todos os tipos</option>
-            <option value="income">Entradas</option>
-            <option value="expense">Saídas</option>
+            <option value="all">Todos os tipos</option><option value="income">Entradas</option><option value="expense">Saídas</option>
           </Select>
           <Select value={filterCat} onChange={e => setFilterCat(e.target.value)}>
             <option value="all">Todas as categorias</option>
@@ -481,40 +473,40 @@ const TransactionsView = ({ transactions, categories, accounts, onSave, onDelete
           </Select>
         </div>
       </Card>
-
-      <Card className="divide-y divide-slate-100 dark:divide-slate-800">
+      <Card className="overflow-hidden">
         {filtered.length === 0 && <EmptyState icon={FileText} title="Sem lançamentos" description="Cadastre sua primeira entrada ou saída." />}
-        {filtered.map(t => {
-          const cat = categories.find(c => c.id === t.category_id);
-          const acc = accounts.find(a => a.id === t.account_id);
-          const Icon = cat ? (CAT_ICONS[cat.icon] || Tag) : Tag;
-          return (
-            <div key={t.id} className="flex items-center gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40">
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: (cat?.color || '#94a3b8') + '20' }}>
-                <Icon className="w-5 h-5" style={{ color: cat?.color || '#94a3b8' }} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-900 dark:text-white truncate">{t.description || cat?.name || '—'}</p>
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="text-xs text-slate-500">{fmtDate(t.date)}</span>
-                  {cat && <Badge color="slate">{cat.name}</Badge>}
-                  {acc && <span className="text-xs text-slate-400">· {acc.name}</span>}
+        <div className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+          {filtered.map(t => {
+            const cat = categories.find(c => c.id === t.category_id);
+            const acc = accounts.find(a => a.id === t.account_id);
+            const Icon = cat ? (CAT_ICONS[cat.icon] || Tag) : Tag;
+            return (
+              <div key={t.id} className="flex items-center gap-3 px-4 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: (cat?.color || '#a1a1aa') + '20' }}>
+                  <Icon className="w-5 h-5" style={{ color: cat?.color || '#a1a1aa' }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-zinc-900 dark:text-white truncate">{t.description || cat?.name || '—'}</p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span className="text-xs text-zinc-400">{fmtDate(t.date)}</span>
+                    {cat && <Badge color="zinc">{cat.name}</Badge>}
+                    {acc && <span className="text-xs text-zinc-400">· {acc.name}</span>}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className={`font-bold text-sm tabular-nums ${t.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+                    {t.type === 'income' ? '+' : '−'}{brl(t.amount)}
+                  </p>
+                  <div className="flex items-center gap-1 justify-end mt-1.5">
+                    <button onClick={() => setModal({ ...t })} className="p-1.5 rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"><Edit2 className="w-3.5 h-3.5 text-zinc-400" /></button>
+                    <button onClick={() => { if (window.confirm('Excluir?')) onDelete(t.id); }} className="p-1.5 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <p className={`font-black ${t.type === 'income' ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {t.type === 'income' ? '+' : '−'} {brl(t.amount)}
-                </p>
-                <div className="flex items-center gap-1 justify-end mt-1">
-                  <button onClick={() => setModal({ ...t })} className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"><Edit2 className="w-3.5 h-3.5 text-slate-500" /></button>
-                  <button onClick={() => { if (window.confirm('Excluir este lançamento?')) onDelete(t.id); }} className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30"><Trash2 className="w-3.5 h-3.5 text-red-500" /></button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </Card>
-
       <TransactionModal data={modal} categories={categories} accounts={accounts} onClose={() => setModal(null)} onSave={(t) => { onSave(t); setModal(null); }} />
     </div>
   );
@@ -525,18 +517,9 @@ const TransactionModal = ({ data, categories, accounts, onClose, onSave }) => {
   const [suggestion, setSuggestion] = useState(null);
   useEffect(() => { setForm(data); setSuggestion(null); }, [data]);
   if (!form) return null;
-
   const availableCats = categories.filter(c => c.type === 'both' || c.type === form.type);
-
-  const onDescriptionBlur = () => {
-    if (!form.category_id && form.description) {
-      const suggested = suggestCategory(form.description, availableCats);
-      if (suggested) setSuggestion(suggested);
-    }
-  };
-
+  const onDescriptionBlur = () => { if (!form.category_id && form.description) { const s = suggestCategory(form.description, availableCats); if (s) setSuggestion(s); } };
   const acceptSuggestion = () => { setForm({ ...form, category_id: suggestion.id }); setSuggestion(null); };
-
   const submit = (e) => {
     e.preventDefault();
     const parsed = parseMoney(form.amount);
@@ -545,74 +528,39 @@ const TransactionModal = ({ data, categories, accounts, onClose, onSave }) => {
     if (!form.account_id) return alert('Selecione uma conta.');
     onSave({ ...form, amount: parsed });
   };
-
   return (
     <Modal open={!!form} onClose={onClose} title={form.id ? 'Editar lançamento' : 'Novo lançamento'} size="md">
       <form onSubmit={submit} className="space-y-4">
         <div className="grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => setForm({ ...form, type: 'income', category_id: '' })} className={`p-3 rounded-xl border-2 font-semibold transition flex items-center justify-center gap-2 ${form.type === 'income' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'border-slate-200 dark:border-slate-700 text-slate-500'}`}>
-            <ArrowUpCircle className="w-4 h-4" /> Entrada
-          </button>
-          <button type="button" onClick={() => setForm({ ...form, type: 'expense', category_id: '' })} className={`p-3 rounded-xl border-2 font-semibold transition flex items-center justify-center gap-2 ${form.type === 'expense' ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'border-slate-200 dark:border-slate-700 text-slate-500'}`}>
-            <ArrowDownCircle className="w-4 h-4" /> Saída
-          </button>
+          {[{ type: 'income', label: 'Entrada', icon: ArrowUpCircle, a: 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' }, { type: 'expense', label: 'Saída', icon: ArrowDownCircle, a: 'border-red-500 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400' }].map(opt => (
+            <button key={opt.type} type="button" onClick={() => setForm({ ...form, type: opt.type, category_id: '' })}
+              className={`p-3.5 rounded-2xl border-2 font-semibold transition-all flex items-center justify-center gap-2 text-sm ${form.type === opt.type ? opt.a : 'border-zinc-200 dark:border-zinc-700 text-zinc-400'}`}>
+              <opt.icon className="w-4 h-4" /> {opt.label}
+            </button>
+          ))}
         </div>
-
         <div className="grid grid-cols-2 gap-3">
-          {/* CORRIGIDO: aceita vírgula e ponto */}
-          <Input
-            label="Valor (R$)"
-            type="text"
-            inputMode="decimal"
-            value={form.amount}
-            onChange={e => {
-              const v = e.target.value.replace(/[^0-9,\.]/g, '');
-              setForm({ ...form, amount: v });
-            }}
-            onBlur={e => setForm({ ...form, amount: parseMoney(e.target.value) })}
-            placeholder="0,00"
-          />
+          <Input label="Valor (R$)" type="text" inputMode="decimal" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value.replace(/[^0-9,\.]/g, '') })} onBlur={e => setForm({ ...form, amount: parseMoney(e.target.value) })} placeholder="0,00" />
           <Input label="Data" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Descrição</label>
-          <input
-            className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none"
-            value={form.description}
-            onChange={e => setForm({ ...form, description: e.target.value })}
-            onBlur={onDescriptionBlur}
-            placeholder="ex: Mercado, Uber, Salário..."
-          />
-          {suggestion && (
-            <button type="button" onClick={acceptSuggestion} className="mt-2 w-full flex items-center gap-2 p-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-sm hover:bg-blue-100 transition">
-              <Sparkles className="w-4 h-4 shrink-0" />
-              <span>Sugestão: categoria <b>{suggestion.name}</b></span>
-              <Check className="w-4 h-4 ml-auto" />
-            </button>
-          )}
+          <label className="block text-xs font-bold text-zinc-400 dark:text-zinc-500 mb-2 uppercase tracking-wider">Descrição</label>
+          <input className="w-full px-4 py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} onBlur={onDescriptionBlur} placeholder="ex: Mercado, Uber, Salário..." />
+          {suggestion && <button type="button" onClick={acceptSuggestion} className="mt-2 w-full flex items-center gap-2 p-3 rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 text-purple-700 dark:text-purple-300 text-sm"><Sparkles className="w-4 h-4 shrink-0" /><span>Sugestão: <b>{suggestion.name}</b></span><Check className="w-4 h-4 ml-auto" /></button>}
         </div>
-
         <Select label="Categoria" value={form.category_id} onChange={e => setForm({ ...form, category_id: e.target.value })}>
-          <option value="">Selecionar...</option>
+          <option value="">Selecionar categoria...</option>
           {availableCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </Select>
-
         <div className="grid grid-cols-2 gap-3">
           <Select label="Conta" value={form.account_id} onChange={e => setForm({ ...form, account_id: e.target.value })}>
             <option value="">Selecionar...</option>
             {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
           </Select>
           <Select label="Pagamento" value={form.payment} onChange={e => setForm({ ...form, payment: e.target.value })}>
-            <option>Dinheiro</option>
-            <option>Pix</option>
-            <option>Débito</option>
-            <option>Cartão</option>
-            <option>Transferência</option>
-            <option>Boleto</option>
+            <option>Dinheiro</option><option>Pix</option><option>Débito</option><option>Cartão</option><option>Transferência</option><option>Boleto</option>
           </Select>
         </div>
-
         <div className="flex gap-2 pt-2">
           <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancelar</Button>
           <Button type="submit" className="flex-1">{form.id ? 'Salvar' : 'Adicionar'}</Button>
@@ -629,67 +577,42 @@ const CategoriesView = ({ categories, onSave, onDelete }) => {
   const [modal, setModal] = useState(null);
   const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6b7280'];
   const ICONS = Object.keys(CAT_ICONS);
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Categorias</h2>
-          <p className="text-sm text-slate-500">Organize seus lançamentos</p>
-        </div>
-        <Button onClick={() => setModal({ name: '', color: COLORS[0], icon: ICONS[0], type: 'expense' })}>
-          <Plus className="w-4 h-4" /> Nova
-        </Button>
+        <div><h2 className="text-2xl font-black text-zinc-900 dark:text-white">Categorias</h2><p className="text-sm text-zinc-400">Organize seus lançamentos</p></div>
+        <Button onClick={() => setModal({ name: '', color: COLORS[0], icon: ICONS[0], type: 'expense' })}><Plus className="w-4 h-4" /> Nova</Button>
       </div>
-
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {categories.map(c => {
           const Icon = CAT_ICONS[c.icon] || Tag;
           return (
-            <Card key={c.id} className="p-4 relative group">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{ backgroundColor: c.color + '20' }}>
-                <Icon className="w-6 h-6" style={{ color: c.color }} />
-              </div>
-              <p className="font-bold text-slate-900 dark:text-white">{c.name}</p>
-              <p className="text-xs text-slate-500">{c.type === 'income' ? 'Entrada' : c.type === 'expense' ? 'Saída' : 'Ambos'}</p>
-              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                <button onClick={() => setModal({ ...c })} className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800"><Edit2 className="w-3.5 h-3.5 text-slate-500" /></button>
-                <button onClick={() => { if (window.confirm(`Excluir categoria "${c.name}"?`)) onDelete(c.id); }} className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30"><Trash2 className="w-3.5 h-3.5 text-red-500" /></button>
+            <Card key={c.id} className="p-4 relative group hover:scale-[1.02] transition-transform duration-200">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{ backgroundColor: c.color + '20' }}><Icon className="w-6 h-6" style={{ color: c.color }} /></div>
+              <p className="font-bold text-zinc-900 dark:text-white text-sm">{c.name}</p>
+              <p className="text-xs text-zinc-400 mt-0.5">{c.type === 'income' ? 'Entrada' : c.type === 'expense' ? 'Saída' : 'Ambos'}</p>
+              <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => setModal({ ...c })} className="p-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800"><Edit2 className="w-3 h-3 text-zinc-500" /></button>
+                <button onClick={() => { if (window.confirm(`Excluir "${c.name}"?`)) onDelete(c.id); }} className="p-1.5 rounded-xl bg-red-50 dark:bg-red-900/30"><Trash2 className="w-3 h-3 text-red-500" /></button>
               </div>
             </Card>
           );
         })}
       </div>
-
       {modal && (
         <Modal open onClose={() => setModal(null)} title={modal.id ? 'Editar categoria' : 'Nova categoria'}>
           <div className="space-y-4">
             <Input label="Nome" value={modal.name} onChange={e => setModal({ ...modal, name: e.target.value })} placeholder="ex: Lazer" />
             <Select label="Tipo" value={modal.type} onChange={e => setModal({ ...modal, type: e.target.value })}>
-              <option value="expense">Saída</option>
-              <option value="income">Entrada</option>
-              <option value="both">Ambos</option>
+              <option value="expense">Saída</option><option value="income">Entrada</option><option value="both">Ambos</option>
             </Select>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Cor</label>
-              <div className="flex flex-wrap gap-2">
-                {COLORS.map(c => (
-                  <button key={c} onClick={() => setModal({ ...modal, color: c })} className={`w-9 h-9 rounded-xl ${modal.color === c ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white' : ''}`} style={{ backgroundColor: c }} />
-                ))}
-              </div>
+              <label className="block text-xs font-bold text-zinc-400 mb-2 uppercase tracking-wider">Cor</label>
+              <div className="flex flex-wrap gap-2">{COLORS.map(c => <button key={c} onClick={() => setModal({ ...modal, color: c })} className={`w-9 h-9 rounded-2xl hover:scale-110 transition-transform ${modal.color === c ? 'ring-2 ring-offset-2 ring-zinc-900 dark:ring-white scale-110' : ''}`} style={{ backgroundColor: c }} />)}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Ícone</label>
-              <div className="grid grid-cols-6 gap-2">
-                {ICONS.map(name => {
-                  const Ic = CAT_ICONS[name];
-                  return (
-                    <button key={name} onClick={() => setModal({ ...modal, icon: name })} className={`aspect-square rounded-xl border-2 flex items-center justify-center ${modal.icon === name ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-200 dark:border-slate-700'}`}>
-                      <Ic className="w-5 h-5 text-slate-600 dark:text-slate-300" />
-                    </button>
-                  );
-                })}
-              </div>
+              <label className="block text-xs font-bold text-zinc-400 mb-2 uppercase tracking-wider">Ícone</label>
+              <div className="grid grid-cols-6 gap-2">{ICONS.map(name => { const Ic = CAT_ICONS[name]; return <button key={name} onClick={() => setModal({ ...modal, icon: name })} className={`aspect-square rounded-2xl border-2 flex items-center justify-center transition-all ${modal.icon === name ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/20' : 'border-zinc-200 dark:border-zinc-700'}`}><Ic className="w-4 h-4 text-zinc-600 dark:text-zinc-300" /></button>; })}</div>
             </div>
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => setModal(null)}>Cancelar</Button>
@@ -708,117 +631,59 @@ const CategoriesView = ({ categories, onSave, onDelete }) => {
 const AccountsView = ({ accounts, onSave, onDelete, onTransfer, canTransfer }) => {
   const [modal, setModal] = useState(null);
   const [tModal, setTModal] = useState(null);
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Contas</h2>
-          <p className="text-sm text-slate-500">Carteira, banco, cartão e Pix</p>
-        </div>
+        <div><h2 className="text-2xl font-black text-zinc-900 dark:text-white">Contas</h2><p className="text-sm text-zinc-400">Carteira, banco, cartão e Pix</p></div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => {
-            if (!canTransfer) return alert('Transferência entre contas é exclusiva do plano Pro.');
-            if (accounts.length < 2) return alert('Você precisa de pelo menos 2 contas para transferir.');
-            setTModal({ fromId: accounts[0]?.id, toId: accounts[1]?.id, amount: '' });
-          }}>
-            <ArrowRightLeft className="w-4 h-4" /> Transferir
-          </Button>
-          <Button onClick={() => setModal({ name: '', type: 'wallet', balance: '' })}>
-            <Plus className="w-4 h-4" /> Nova
-          </Button>
+          <Button variant="outline" onClick={() => { if (!canTransfer) return alert('Exclusivo do plano Pro.'); if (accounts.length < 2) return alert('Você precisa de pelo menos 2 contas.'); setTModal({ fromId: accounts[0]?.id, toId: accounts[1]?.id, amount: '' }); }}><ArrowRightLeft className="w-4 h-4" /> Transferir</Button>
+          <Button onClick={() => setModal({ name: '', type: 'wallet', balance: '' })}><Plus className="w-4 h-4" /> Nova</Button>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {accounts.map(a => {
           const Icon = ACCOUNT_ICON[a.type] || Wallet;
           const positive = +a.balance >= 0;
           return (
-            <Card key={a.id} className="p-5 relative overflow-hidden group">
-              <div className={`absolute -right-8 -top-8 w-28 h-28 rounded-full ${positive ? 'bg-emerald-500/10' : 'bg-red-500/10'}`} />
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 ${positive ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
-                <Icon className={`w-5 h-5 ${positive ? 'text-emerald-600' : 'text-red-600'}`} />
-              </div>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{ACCOUNT_LABEL[a.type]}</p>
-              <p className="font-bold text-slate-900 dark:text-white">{a.name}</p>
-              <p className={`text-2xl font-black mt-2 ${positive ? 'text-emerald-600' : 'text-red-600'}`}>{brl(a.balance)}</p>
-              <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                <button onClick={() => setModal({ ...a })} className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800"><Edit2 className="w-3.5 h-3.5 text-slate-500" /></button>
-                <button onClick={() => { if (window.confirm(`Excluir conta "${a.name}"?`)) onDelete(a.id); }} className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30"><Trash2 className="w-3.5 h-3.5 text-red-500" /></button>
+            <Card key={a.id} className="p-5 relative overflow-hidden group hover:scale-[1.02] transition-transform duration-200">
+              <div className={`absolute -right-8 -top-8 w-28 h-28 rounded-full ${positive ? 'bg-emerald-500/8' : 'bg-red-500/8'} group-hover:scale-125 transition-transform duration-300`} />
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center mb-3 ${positive ? 'bg-emerald-50 dark:bg-emerald-500/20' : 'bg-red-50 dark:bg-red-500/20'}`}><Icon className={`w-5 h-5 ${positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`} /></div>
+              <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">{ACCOUNT_LABEL[a.type]}</p>
+              <p className="font-bold text-zinc-900 dark:text-white mt-0.5">{a.name}</p>
+              <p className={`text-2xl font-black mt-2 tabular-nums ${positive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{brl(a.balance)}</p>
+              <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => setModal({ ...a })} className="p-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800"><Edit2 className="w-3.5 h-3.5 text-zinc-500" /></button>
+                <button onClick={() => { if (window.confirm(`Excluir "${a.name}"?`)) onDelete(a.id); }} className="p-1.5 rounded-xl bg-red-50 dark:bg-red-900/30"><Trash2 className="w-3.5 h-3.5 text-red-500" /></button>
               </div>
             </Card>
           );
         })}
       </div>
-
       {modal && (
         <Modal open onClose={() => setModal(null)} title={modal.id ? 'Editar conta' : 'Nova conta'}>
           <div className="space-y-4">
-            <Input label="Nome" value={modal.name} onChange={e => setModal({ ...modal, name: e.target.value })} placeholder="ex: Itaú Conta Corrente" />
+            <Input label="Nome" value={modal.name} onChange={e => setModal({ ...modal, name: e.target.value })} placeholder="ex: Itaú" />
             <Select label="Tipo" value={modal.type} onChange={e => setModal({ ...modal, type: e.target.value })}>
-              <option value="wallet">Carteira</option>
-              <option value="bank">Banco</option>
-              <option value="card">Cartão</option>
-              <option value="pix">Pix</option>
+              <option value="wallet">Carteira</option><option value="bank">Banco</option><option value="card">Cartão</option><option value="pix">Pix</option>
             </Select>
-            {/* CORRIGIDO: aceita vírgula e ponto */}
-            <Input
-              label="Saldo inicial (R$)"
-              type="text"
-              inputMode="decimal"
-              value={modal.balance}
-              onChange={e => {
-                const v = e.target.value.replace(/[^0-9,\.\-]/g, '');
-                setModal({ ...modal, balance: v });
-              }}
-              onBlur={e => setModal({ ...modal, balance: parseMoney(e.target.value) })}
-              placeholder="0,00"
-            />
+            <Input label="Saldo inicial (R$)" type="text" inputMode="decimal" value={modal.balance} onChange={e => setModal({ ...modal, balance: e.target.value.replace(/[^0-9,\.\-]/g, '') })} onBlur={e => setModal({ ...modal, balance: parseMoney(e.target.value) })} placeholder="0,00" />
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => setModal(null)}>Cancelar</Button>
-              <Button className="flex-1" onClick={() => {
-                if (!modal.name) return alert('Informe o nome.');
-                onSave({ ...modal, balance: parseMoney(modal.balance) });
-                setModal(null);
-              }}>Salvar</Button>
+              <Button className="flex-1" onClick={() => { if (!modal.name) return alert('Informe o nome.'); onSave({ ...modal, balance: parseMoney(modal.balance) }); setModal(null); }}>Salvar</Button>
             </div>
           </div>
         </Modal>
       )}
-
       {tModal && (
         <Modal open onClose={() => setTModal(null)} title="Transferir entre contas">
           <div className="space-y-4">
-            <Select label="De" value={tModal.fromId} onChange={e => setTModal({ ...tModal, fromId: e.target.value })}>
-              {accounts.map(a => <option key={a.id} value={a.id}>{a.name} — {brl(a.balance)}</option>)}
-            </Select>
-            <div className="flex justify-center"><ArrowRightLeft className="w-5 h-5 text-slate-400" /></div>
-            <Select label="Para" value={tModal.toId} onChange={e => setTModal({ ...tModal, toId: e.target.value })}>
-              {accounts.map(a => <option key={a.id} value={a.id}>{a.name} — {brl(a.balance)}</option>)}
-            </Select>
-            {/* CORRIGIDO: aceita vírgula e ponto */}
-            <Input
-              label="Valor (R$)"
-              type="text"
-              inputMode="decimal"
-              value={tModal.amount}
-              onChange={e => {
-                const v = e.target.value.replace(/[^0-9,\.]/g, '');
-                setTModal({ ...tModal, amount: v });
-              }}
-              onBlur={e => setTModal({ ...tModal, amount: parseMoney(e.target.value) })}
-              placeholder="0,00"
-            />
+            <Select label="De" value={tModal.fromId} onChange={e => setTModal({ ...tModal, fromId: e.target.value })}>{accounts.map(a => <option key={a.id} value={a.id}>{a.name} — {brl(a.balance)}</option>)}</Select>
+            <div className="flex justify-center"><div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center"><ArrowRightLeft className="w-4 h-4 text-zinc-400" /></div></div>
+            <Select label="Para" value={tModal.toId} onChange={e => setTModal({ ...tModal, toId: e.target.value })}>{accounts.map(a => <option key={a.id} value={a.id}>{a.name} — {brl(a.balance)}</option>)}</Select>
+            <Input label="Valor (R$)" type="text" inputMode="decimal" value={tModal.amount} onChange={e => setTModal({ ...tModal, amount: e.target.value.replace(/[^0-9,\.]/g, '') })} onBlur={e => setTModal({ ...tModal, amount: parseMoney(e.target.value) })} placeholder="0,00" />
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => setTModal(null)}>Cancelar</Button>
-              <Button className="flex-1" onClick={() => {
-                const val = parseMoney(tModal.amount);
-                if (!val || val <= 0) return alert('Valor inválido.');
-                if (tModal.fromId === tModal.toId) return alert('Selecione contas diferentes.');
-                onTransfer(tModal.fromId, tModal.toId, val);
-                setTModal(null);
-              }}>Transferir</Button>
+              <Button className="flex-1" onClick={() => { const val = parseMoney(tModal.amount); if (!val || val <= 0) return alert('Valor inválido.'); if (tModal.fromId === tModal.toId) return alert('Contas iguais.'); onTransfer(tModal.fromId, tModal.toId, val); setTModal(null); }}>Transferir</Button>
             </div>
           </div>
         </Modal>
@@ -833,137 +698,74 @@ const AccountsView = ({ accounts, onSave, onDelete, onTransfer, canTransfer }) =
 const ReportsView = ({ transactions, categories, canExport }) => {
   const [period, setPeriod] = useState('month');
   const now = new Date();
-
   const filtered = useMemo(() => {
     return transactions.filter(t => {
       const d = new Date(t.date + 'T00:00:00');
       if (period === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      if (period === '3m') {
-        const limit = new Date(now); limit.setMonth(limit.getMonth() - 3);
-        return d >= limit;
-      }
+      if (period === '3m') { const l = new Date(now); l.setMonth(l.getMonth() - 3); return d >= l; }
       if (period === 'year') return d.getFullYear() === now.getFullYear();
       return true;
     });
   }, [transactions, period]);
-
   const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + +t.amount, 0);
   const expense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0);
-
-  const byCategory = categories.map(c => ({
-    name: c.name,
-    value: filtered.filter(t => t.type === 'expense' && t.category_id === c.id).reduce((s, t) => s + +t.amount, 0),
-    color: c.color,
-  })).filter(c => c.value > 0);
-
-  const byMonth = useMemo(() => {
-    const map = {};
-    filtered.forEach(t => {
-      const k = monthKey(t.date);
-      if (!map[k]) map[k] = { month: monthLabel(k), entradas: 0, saidas: 0 };
-      if (t.type === 'income') map[k].entradas += +t.amount; else map[k].saidas += +t.amount;
-    });
-    return Object.values(map);
-  }, [filtered]);
-
+  const byCategory = categories.map(c => ({ name: c.name, value: filtered.filter(t => t.type === 'expense' && t.category_id === c.id).reduce((s, t) => s + +t.amount, 0), color: c.color })).filter(c => c.value > 0);
+  const byMonth = useMemo(() => { const map = {}; filtered.forEach(t => { const k = monthKey(t.date); if (!map[k]) map[k] = { month: monthLabel(k), entradas: 0, saidas: 0 }; if (t.type === 'income') map[k].entradas += +t.amount; else map[k].saidas += +t.amount; }); return Object.values(map); }, [filtered]);
   const exportCSV = () => {
     if (!canExport) return alert('Exportação é exclusiva do plano Pro.');
     const headers = ['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor'];
-    const rows = filtered.map(t => {
-      const cat = categories.find(c => c.id === t.category_id);
-      return [t.date, t.type === 'income' ? 'Entrada' : 'Saída', cat?.name || '', (t.description || '').replace(/,/g, ';'), (+t.amount).toFixed(2)];
-    });
+    const rows = filtered.map(t => { const cat = categories.find(c => c.id === t.category_id); return [t.date, t.type === 'income' ? 'Entrada' : 'Saída', cat?.name || '', (t.description || '').replace(/,/g, ';'), (+t.amount).toFixed(2)]; });
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `relatorio-cgpro-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement('a'); a.href = url; a.download = `relatorio-cgpro-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(url);
   };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Relatórios</h2>
-          <p className="text-sm text-slate-500">Analise seus gastos em detalhes</p>
-        </div>
+        <div><h2 className="text-2xl font-black text-zinc-900 dark:text-white">Relatórios</h2><p className="text-sm text-zinc-400">Analise seus gastos</p></div>
         <div className="flex gap-2 flex-wrap">
-          <Select value={period} onChange={e => setPeriod(e.target.value)} className="!w-auto">
-            <option value="month">Este mês</option>
-            <option value="3m">Últimos 3 meses</option>
-            <option value="year">Este ano</option>
-            <option value="all">Todo o período</option>
-          </Select>
-          <Button variant="outline" onClick={exportCSV}>
-            <Download className="w-4 h-4" /> Exportar CSV {!canExport && <Crown className="w-3 h-3" />}
-          </Button>
+          <Select value={period} onChange={e => setPeriod(e.target.value)} className="!w-auto"><option value="month">Este mês</option><option value="3m">Últimos 3 meses</option><option value="year">Este ano</option><option value="all">Todo o período</option></Select>
+          <Button variant="outline" onClick={exportCSV}><Download className="w-4 h-4" /> CSV {!canExport && <Crown className="w-3 h-3" />}</Button>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <StatCard title="Total de entradas" value={brl(income)} icon={TrendingUp} color="emerald" />
-        <StatCard title="Total de saídas"   value={brl(expense)} icon={TrendingDown} color="red" />
-        <StatCard title="Resultado"          value={brl(income - expense)} icon={Wallet} color={income - expense >= 0 ? 'emerald' : 'red'} />
+        <StatCard title="Entradas" value={brl(income)} icon={TrendingUp} color="emerald" />
+        <StatCard title="Saídas" value={brl(expense)} icon={TrendingDown} color="red" />
+        <StatCard title="Resultado" value={brl(income - expense)} icon={Wallet} color={income - expense >= 0 ? 'emerald' : 'red'} />
       </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="p-5">
-          <h3 className="font-bold text-slate-900 dark:text-white mb-4">Gastos por categoria</h3>
-          {byCategory.length === 0 ? (
-            <EmptyState icon={BarChart3} title="Sem dados" description="Nenhuma despesa no período selecionado." />
-          ) : (
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie data={byCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={(e) => e.name}>
-                  {byCategory.map((c, i) => <Cell key={i} fill={c.color} />)}
-                </Pie>
-                <Tooltip formatter={(v) => brl(v)} contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} />
-              </PieChart>
+          <h3 className="font-bold text-zinc-900 dark:text-white mb-4">Gastos por categoria</h3>
+          {byCategory.length === 0 ? <EmptyState icon={BarChart3} title="Sem dados" description="Nenhuma despesa no período." /> : (
+            <ResponsiveContainer width="100%" height={240}>
+              <PieChart><Pie data={byCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={2}>{byCategory.map((c, i) => <Cell key={i} fill={c.color} />)}</Pie><Tooltip formatter={(v) => brl(v)} contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }} /></PieChart>
             </ResponsiveContainer>
           )}
         </Card>
-
         <Card className="p-5">
-          <h3 className="font-bold text-slate-900 dark:text-white mb-4">Entradas vs Saídas</h3>
-          {byMonth.length === 0 ? (
-            <EmptyState icon={BarChart3} title="Sem dados" description="Nenhum lançamento no período." />
-          ) : (
-            <ResponsiveContainer width="100%" height={260}>
+          <h3 className="font-bold text-zinc-900 dark:text-white mb-4">Entradas vs Saídas</h3>
+          {byMonth.length === 0 ? <EmptyState icon={BarChart3} title="Sem dados" description="Nenhum lançamento no período." /> : (
+            <ResponsiveContainer width="100%" height={240}>
               <BarChart data={byMonth} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.4} />
-                <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#94a3b8" />
-                <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" />
-                <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }} formatter={(v) => brl(v)} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="entradas" fill="#10b981" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="saidas"   fill="#ef4444" radius={[8, 8, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" opacity={0.3} />
+                <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }} formatter={(v) => brl(v)} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Bar dataKey="entradas" fill="#10b981" radius={[8, 8, 0, 0]} /><Bar dataKey="saidas" fill="#ef4444" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </Card>
       </div>
-
       <Card className="p-5">
-        <h3 className="font-bold text-slate-900 dark:text-white mb-4">Ranking de gastos por categoria</h3>
-        <div className="space-y-2">
-          {byCategory.sort((a, b) => b.value - a.value).map((c, i) => {
-            const pct = expense > 0 ? (c.value / expense) * 100 : 0;
-            return (
-              <div key={i}>
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">{c.name}</span>
-                  <span className="text-slate-500">{brl(c.value)} · {pct.toFixed(1)}%</span>
-                </div>
-                <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: c.color }} />
-                </div>
-              </div>
-            );
-          })}
-          {byCategory.length === 0 && <p className="text-sm text-slate-500 text-center py-4">Sem dados para exibir.</p>}
+        <h3 className="font-bold text-zinc-900 dark:text-white mb-4">Ranking por categoria</h3>
+        <div className="space-y-3">
+          {byCategory.sort((a, b) => b.value - a.value).map((c, i) => { const pct = expense > 0 ? (c.value / expense) * 100 : 0; return (
+            <div key={i}><div className="flex items-center justify-between text-sm mb-1.5"><div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color }} /><span className="font-semibold text-zinc-700 dark:text-zinc-300">{c.name}</span></div><span className="text-zinc-400 tabular-nums">{brl(c.value)} · {pct.toFixed(1)}%</span></div><div className="h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: c.color }} /></div></div>
+          ); })}
+          {byCategory.length === 0 && <p className="text-sm text-zinc-400 text-center py-4">Sem dados para exibir.</p>}
         </div>
       </Card>
     </div>
@@ -975,46 +777,17 @@ const ReportsView = ({ transactions, categories, canExport }) => {
 // =====================================================
 const PlansView = ({ profile, onChangePlan }) => (
   <div className="space-y-6">
-    <div className="text-center">
-      <h2 className="text-3xl font-black text-slate-900 dark:text-white">Escolha seu plano</h2>
-      <p className="text-slate-500 mt-1">Faça upgrade quando quiser. Cancele quando quiser.</p>
-    </div>
-
+    <div className="text-center"><h2 className="text-3xl font-black text-zinc-900 dark:text-white">Planos</h2><p className="text-zinc-400 mt-1">Faça upgrade quando quiser.</p></div>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {PLANS.map(p => {
-        const current = profile?.plan === p.id;
-        return (
-          <Card key={p.id} className={`p-6 relative ${p.highlighted ? 'ring-2 ring-emerald-500 shadow-2xl shadow-emerald-500/20 scale-[1.02]' : ''}`}>
-            {p.highlighted && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-blue-600 text-white text-xs font-bold uppercase tracking-wider">
-                Mais popular
-              </div>
-            )}
-            <h3 className="font-black text-xl text-slate-900 dark:text-white">{p.name}</h3>
-            <div className="mt-3 mb-5">
-              <span className="text-4xl font-black text-slate-900 dark:text-white">R$ {p.price.toFixed(2).replace('.', ',')}</span>
-              {p.price > 0 && <span className="text-slate-500 text-sm">/mês</span>}
-            </div>
-            <ul className="space-y-2 mb-6 min-h-[180px]">
-              {p.features.map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-                  <Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-            {current ? (
-              <Button variant="outline" className="w-full" disabled>
-                <CheckCircle2 className="w-4 h-4" /> Plano atual
-              </Button>
-            ) : (
-              <Button variant={p.highlighted ? 'primary' : 'secondary'} className="w-full" onClick={() => onChangePlan(p.id)}>
-                Assinar {p.name}
-              </Button>
-            )}
-          </Card>
-        );
-      })}
+      {PLANS.map(p => { const current = profile?.plan === p.id; return (
+        <Card key={p.id} className={`p-6 relative ${p.highlighted ? 'ring-2 ring-emerald-500 shadow-2xl shadow-emerald-500/20' : ''}`}>
+          {p.highlighted && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 text-white text-xs font-bold uppercase tracking-wider shadow-lg">Mais popular</div>}
+          <h3 className="font-black text-xl text-zinc-900 dark:text-white">{p.name}</h3>
+          <div className="mt-3 mb-5"><span className="text-4xl font-black text-zinc-900 dark:text-white tabular-nums">R$ {p.price.toFixed(2).replace('.', ',')}</span>{p.price > 0 && <span className="text-zinc-400 text-sm">/mês</span>}</div>
+          <ul className="space-y-2.5 mb-6 min-h-[180px]">{p.features.map((f, i) => <li key={i} className="flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-400"><div className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5"><Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" /></div><span>{f}</span></li>)}</ul>
+          {current ? <Button variant="outline" className="w-full" disabled><CheckCircle2 className="w-4 h-4" /> Plano atual</Button> : <Button variant={p.highlighted ? 'primary' : 'secondary'} className="w-full" onClick={() => onChangePlan(p.id)}>Assinar {p.name}</Button>}
+        </Card>
+      ); })}
     </div>
   </div>
 );
@@ -1023,81 +796,24 @@ const PlansView = ({ profile, onChangePlan }) => (
 // ADMIN
 // =====================================================
 const AdminView = ({ users, onUpdateUser }) => {
-  const stats = {
-    total: users.length,
-    active: users.filter(u => u.active).length,
-    paying: users.filter(u => u.plan !== 'free').length,
-    mrr: users.filter(u => u.plan !== 'free' && u.active).reduce((s, u) => s + (PLANS.find(p => p.id === u.plan)?.price || 0), 0),
-  };
-
+  const stats = { total: users.length, active: users.filter(u => u.active).length, paying: users.filter(u => u.plan !== 'free').length, mrr: users.filter(u => u.plan !== 'free' && u.active).reduce((s, u) => s + (PLANS.find(p => p.id === u.plan)?.price || 0), 0) };
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Shield className="w-6 h-6 text-blue-600" />
-        <div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Painel Administrativo</h2>
-          <p className="text-sm text-slate-500">Gerencie usuários e assinaturas</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard title="Total usuários" value={stats.total} icon={Users} color="blue" />
-        <StatCard title="Ativos"         value={stats.active} icon={CheckCircle2} color="emerald" />
-        <StatCard title="Pagantes"       value={stats.paying} icon={Crown} color="slate" />
-        <StatCard title="MRR estimado"   value={brl(stats.mrr)} icon={Banknote} color="emerald" />
-      </div>
-
+      <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-500/20 flex items-center justify-center"><Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" /></div><div><h2 className="text-2xl font-black text-zinc-900 dark:text-white">Admin</h2><p className="text-sm text-zinc-400">Gerencie usuários</p></div></div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3"><StatCard title="Usuários" value={stats.total} icon={Users} color="blue" /><StatCard title="Ativos" value={stats.active} icon={CheckCircle2} color="emerald" /><StatCard title="Pagantes" value={stats.paying} icon={Crown} color="zinc" /><StatCard title="MRR" value={brl(stats.mrr)} icon={Banknote} color="emerald" /></div>
       <Card className="overflow-hidden">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-          <h3 className="font-bold text-slate-900 dark:text-white">Usuários cadastrados</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/50">
-              <tr className="text-left">
-                <th className="p-3 font-semibold text-slate-600 dark:text-slate-300">Usuário</th>
-                <th className="p-3 font-semibold text-slate-600 dark:text-slate-300">Plano</th>
-                <th className="p-3 font-semibold text-slate-600 dark:text-slate-300 hidden md:table-cell">Cadastro</th>
-                <th className="p-3 font-semibold text-slate-600 dark:text-slate-300">Status</th>
-                <th className="p-3 font-semibold text-slate-600 dark:text-slate-300">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {users.map(u => (
-                <tr key={u.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                        {(u.name || '?').split(' ').map(n => n[0]).slice(0, 2).join('')}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-slate-900 dark:text-white truncate">{u.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{u.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <select value={u.plan} onChange={e => onUpdateUser(u.id, { plan: e.target.value })} className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border-0 text-xs font-semibold">
-                      {PLANS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
-                  </td>
-                  <td className="p-3 text-slate-500 hidden md:table-cell">{new Date(u.created_at).toLocaleDateString('pt-BR')}</td>
-                  <td className="p-3">
-                    {u.active ? <Badge color="emerald">Ativo</Badge> : <Badge color="red">Bloqueado</Badge>}
-                  </td>
-                  <td className="p-3">
-                    <button
-                      onClick={() => onUpdateUser(u.id, { active: !u.active })}
-                      className={`px-3 py-1 rounded-lg text-xs font-semibold ${u.active ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400'}`}
-                    >
-                      {u.active ? 'Bloquear' : 'Ativar'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <div className="p-5 border-b border-zinc-100 dark:border-zinc-800"><h3 className="font-bold text-zinc-900 dark:text-white">Usuários</h3></div>
+        <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-zinc-50 dark:bg-zinc-800/50"><tr>{['Usuário', 'Plano', 'Cadastro', 'Status', 'Ações'].map(h => <th key={h} className="px-4 py-3 text-xs font-bold text-zinc-400 uppercase tracking-wider text-left">{h}</th>)}</tr></thead>
+          <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/50">{users.map(u => (
+            <tr key={u.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+              <td className="px-4 py-3"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold shrink-0">{(u.name || '?').split(' ').map(n => n[0]).slice(0, 2).join('')}</div><div><p className="font-semibold text-zinc-900 dark:text-white truncate max-w-[120px]">{u.name}</p><p className="text-xs text-zinc-400 truncate max-w-[120px]">{u.email}</p></div></div></td>
+              <td className="px-4 py-3"><select value={u.plan} onChange={e => onUpdateUser(u.id, { plan: e.target.value })} className="px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 border-0 text-xs font-semibold text-zinc-700 dark:text-zinc-300">{PLANS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></td>
+              <td className="px-4 py-3 text-zinc-400 text-xs">{new Date(u.created_at).toLocaleDateString('pt-BR')}</td>
+              <td className="px-4 py-3">{u.active ? <Badge color="emerald">Ativo</Badge> : <Badge color="red">Bloqueado</Badge>}</td>
+              <td className="px-4 py-3"><button onClick={() => onUpdateUser(u.id, { active: !u.active })} className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${u.active ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'}`}>{u.active ? 'Bloquear' : 'Ativar'}</button></td>
+            </tr>
+          ))}</tbody>
+        </table></div>
       </Card>
     </div>
   );
@@ -1108,44 +824,19 @@ const AdminView = ({ users, onUpdateUser }) => {
 // =====================================================
 const SettingsView = ({ profile, onUpdate, dark, toggleDark }) => {
   const [form, setForm] = useState({ name: profile?.name || '', email: profile?.email || '' });
-
   return (
     <div className="space-y-4 max-w-2xl">
-      <div>
-        <h2 className="text-2xl font-black text-slate-900 dark:text-white">Configurações</h2>
-        <p className="text-sm text-slate-500">Gerencie sua conta e preferências</p>
-      </div>
-
+      <div><h2 className="text-2xl font-black text-zinc-900 dark:text-white">Configurações</h2><p className="text-sm text-zinc-400">Gerencie sua conta</p></div>
       <Card className="p-5">
-        <h3 className="font-bold text-slate-900 dark:text-white mb-4">Perfil</h3>
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-white text-xl font-black">
-            {(profile?.name || '?').split(' ').map(n => n[0]).slice(0, 2).join('')}
-          </div>
-          <div>
-            <p className="font-bold text-slate-900 dark:text-white">{profile?.name}</p>
-            <Badge color={profile?.plan === 'pro' ? 'emerald' : profile?.plan === 'basic' ? 'blue' : 'slate'}>
-              Plano {PLANS.find(p => p.id === profile?.plan)?.name}
-            </Badge>
-          </div>
-        </div>
-        <div className="space-y-3">
-          <Input label="Nome" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-          <Input label="E-mail" value={form.email} disabled />
-          <Button onClick={() => onUpdate({ name: form.name })}>Salvar alterações</Button>
-        </div>
+        <h3 className="font-bold text-zinc-900 dark:text-white mb-5">Perfil</h3>
+        <div className="flex items-center gap-4 mb-5"><div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-emerald-500/20">{(profile?.name || '?').split(' ').map(n => n[0]).slice(0, 2).join('')}</div><div><p className="font-bold text-zinc-900 dark:text-white">{profile?.name}</p><Badge color={profile?.plan === 'pro' ? 'emerald' : profile?.plan === 'basic' ? 'blue' : 'zinc'}>Plano {PLANS.find(p => p.id === profile?.plan)?.name}</Badge></div></div>
+        <div className="space-y-3"><Input label="Nome" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /><Input label="E-mail" value={form.email} disabled className="opacity-60" /><Button onClick={() => onUpdate({ name: form.name })}>Salvar alterações</Button></div>
       </Card>
-
       <Card className="p-5">
-        <h3 className="font-bold text-slate-900 dark:text-white mb-3">Aparência</h3>
-        <button onClick={toggleDark} className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-100 dark:bg-slate-800">
-          <span className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
-            {dark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-            Modo {dark ? 'escuro' : 'claro'}
-          </span>
-          <div className={`w-11 h-6 rounded-full p-0.5 transition ${dark ? 'bg-emerald-600' : 'bg-slate-300'}`}>
-            <div className={`w-5 h-5 rounded-full bg-white transition-transform ${dark ? 'translate-x-5' : ''}`} />
-          </div>
+        <h3 className="font-bold text-zinc-900 dark:text-white mb-4">Aparência</h3>
+        <button onClick={toggleDark} className="w-full flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors">
+          <span className="flex items-center gap-3 text-sm font-semibold text-zinc-700 dark:text-zinc-200"><div className="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">{dark ? <Moon className="w-4 h-4 text-zinc-500" /> : <Sun className="w-4 h-4 text-zinc-500" />}</div>Modo {dark ? 'escuro' : 'claro'}</span>
+          <div className={`w-12 h-6 rounded-full p-0.5 transition-all duration-300 ${dark ? 'bg-emerald-500' : 'bg-zinc-300'}`}><div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-300 ${dark ? 'translate-x-6' : ''}`} /></div>
         </button>
       </Card>
     </div>
@@ -1163,62 +854,45 @@ export default function App() {
   const [view, setView] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  if (auth.loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+  if (auth.loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-12 h-12 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/30"><Wallet className="w-6 h-6 text-white" /></div>
+        <Loader2 className="w-5 h-5 text-emerald-500 animate-spin" />
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (!auth.user) {
-    return <AuthScreen onLogin={auth.signIn} onRegister={auth.signUp} onReset={auth.resetPassword} />;
-  }
+  if (!auth.user) return <AuthScreen onLogin={auth.signIn} onRegister={auth.signUp} onReset={auth.resetPassword} />;
 
-  if (data.loading || !auth.profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mx-auto mb-3" />
-          <p className="text-sm text-slate-500">Carregando seus dados...</p>
-        </div>
-      </div>
-    );
-  }
+  if (data.loading || !auth.profile) return (
+    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
+      <div className="text-center"><Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-3" /><p className="text-sm text-zinc-400">Carregando seus dados...</p></div>
+    </div>
+  );
 
-  if (!auth.profile.active) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950">
-        <Card className="p-8 max-w-md text-center">
-          <Ban className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Conta bloqueada</h2>
-          <p className="text-sm text-slate-500 mb-4">Sua conta foi desativada. Entre em contato com o suporte.</p>
-          <Button variant="outline" onClick={auth.signOut}>Sair</Button>
-        </Card>
-      </div>
-    );
-  }
+  if (!auth.profile.active) return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-50 dark:bg-zinc-950">
+      <Card className="p-8 max-w-sm text-center"><div className="w-12 h-12 rounded-3xl bg-red-50 dark:bg-red-500/20 flex items-center justify-center mx-auto mb-4"><Ban className="w-6 h-6 text-red-500" /></div><h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Conta bloqueada</h2><p className="text-sm text-zinc-400 mb-5">Sua conta foi desativada.</p><Button variant="outline" onClick={auth.signOut}>Sair</Button></Card>
+    </div>
+  );
 
   const plan = PLANS.find(p => p.id === auth.profile.plan);
   const monthCount = data.transactions.filter(t => monthKey(t.date) === monthKey(new Date())).length;
   const canAddTransaction = auth.profile.plan !== 'free' || monthCount < plan.limit;
   const canExport = auth.profile.plan === 'pro';
   const canTransfer = auth.profile.plan === 'pro';
-
-  const changePlan = (planId) => {
-    auth.updateProfile({ plan: planId });
-    alert(`Plano alterado para ${PLANS.find(p => p.id === planId).name}! (Em produção: integrar com gateway de pagamento)`);
-  };
+  const changePlan = (planId) => { auth.updateProfile({ plan: planId }); alert(`Plano alterado para ${PLANS.find(p => p.id === planId).name}!`); };
 
   const navItems = [
-    { id: 'dashboard',    label: 'Dashboard',    icon: Home },
-    { id: 'transactions', label: 'Lançamentos',  icon: FileText },
-    { id: 'categories',   label: 'Categorias',   icon: Tag },
-    { id: 'accounts',     label: 'Contas',       icon: CreditCard },
-    { id: 'reports',      label: 'Relatórios',   icon: BarChart3 },
-    { id: 'plans',        label: 'Planos',       icon: Crown },
+    { id: 'dashboard',    label: 'Dashboard',   icon: Home },
+    { id: 'transactions', label: 'Lançamentos', icon: FileText },
+    { id: 'categories',   label: 'Categorias',  icon: Tag },
+    { id: 'accounts',     label: 'Contas',      icon: CreditCard },
+    { id: 'reports',      label: 'Relatórios',  icon: BarChart3 },
+    { id: 'plans',        label: 'Planos',      icon: Crown },
     ...(auth.profile.role === 'admin' ? [{ id: 'admin', label: 'Admin', icon: Shield }] : []),
-    { id: 'settings',     label: 'Configurações', icon: Settings },
+    { id: 'settings',     label: 'Config',      icon: Settings },
   ];
 
   const renderView = () => {
@@ -1236,121 +910,93 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white transition-colors duration-200">
       <div className="flex">
-        <aside className="hidden lg:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 min-h-screen sticky top-0 p-5">
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-              <Wallet className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-base font-black leading-tight">Central de Gastos</h1>
-              <p className="text-[10px] font-bold text-emerald-600 tracking-widest">PRO</p>
+        {/* Sidebar Desktop */}
+        <aside className="hidden lg:flex flex-col w-64 bg-white dark:bg-zinc-900 border-r border-zinc-100 dark:border-zinc-800 min-h-screen sticky top-0">
+          <div className="p-5 border-b border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/25"><Wallet className="w-5 h-5 text-white" /></div>
+              <div><h1 className="text-sm font-black text-zinc-900 dark:text-white leading-tight">Central de Gastos</h1><div className="flex items-center gap-1 mt-0.5"><div className="w-1 h-1 rounded-full bg-emerald-500" /><p className="text-[9px] font-bold text-emerald-500 tracking-widest">PRO</p></div></div>
             </div>
           </div>
-
-          <nav className="flex-1 space-y-1">
+          <nav className="flex-1 p-3 space-y-0.5">
             {navItems.map(item => (
               <button key={item.id} onClick={() => setView(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition ${view === item.id ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
-                <item.icon className="w-4 h-4" />
-                {item.label}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-150 ${view === item.id ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'}`}>
+                <item.icon className="w-4 h-4 shrink-0" />{item.label}
+                {view === item.id && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500" />}
               </button>
             ))}
           </nav>
-
-          <div className="mt-4 p-3 rounded-2xl bg-slate-100 dark:bg-slate-800">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                {auth.profile.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+          <div className="p-3 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800">
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold shrink-0">{auth.profile.name.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
+                <div className="min-w-0 flex-1"><p className="text-sm font-bold text-zinc-900 dark:text-white truncate">{auth.profile.name}</p><Badge color={auth.profile.plan === 'pro' ? 'emerald' : auth.profile.plan === 'basic' ? 'blue' : 'zinc'}>{PLANS.find(p => p.id === auth.profile.plan)?.name}</Badge></div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold truncate">{auth.profile.name}</p>
-                <Badge color={auth.profile.plan === 'pro' ? 'emerald' : auth.profile.plan === 'basic' ? 'blue' : 'slate'}>
-                  {PLANS.find(p => p.id === auth.profile.plan)?.name}
-                </Badge>
-              </div>
+              <button onClick={auth.signOut} className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-red-500 py-2 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><LogOut className="w-3.5 h-3.5" /> Sair</button>
             </div>
-            <button onClick={auth.signOut} className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 py-1.5 rounded-lg">
-              <LogOut className="w-3.5 h-3.5" /> Sair
-            </button>
           </div>
         </aside>
 
         <main className="flex-1 min-w-0">
-          <header className="lg:hidden sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center">
-                <Wallet className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h1 className="text-sm font-black leading-tight">Central de Gastos</h1>
-                <p className="text-[9px] font-bold text-emerald-600 tracking-widest leading-tight">PRO</p>
-              </div>
+          {/* Header Mobile */}
+          <header className="lg:hidden sticky top-0 z-30 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-800 px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center"><Wallet className="w-4 h-4 text-white" /></div>
+              <div><h1 className="text-sm font-black text-zinc-900 dark:text-white">Central de Gastos</h1><p className="text-[9px] font-bold text-emerald-500 tracking-widest">PRO</p></div>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={toggleDark} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-                {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-                <Menu className="w-5 h-5" />
-              </button>
+              <button onClick={toggleDark} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">{dark ? <Sun className="w-4 h-4 text-zinc-500" /> : <Moon className="w-4 h-4 text-zinc-500" />}</button>
+              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"><Menu className="w-5 h-5 text-zinc-500" /></button>
             </div>
           </header>
 
-          <header className="hidden lg:flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800">
-            <h1 className="text-lg font-bold">{navItems.find(n => n.id === view)?.label}</h1>
-            <div className="flex items-center gap-2">
-              <button onClick={toggleDark} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
-                {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-            </div>
+          {/* Header Desktop */}
+          <header className="hidden lg:flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+            <h1 className="text-lg font-bold text-zinc-900 dark:text-white">{navItems.find(n => n.id === view)?.label}</h1>
+            <button onClick={toggleDark} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">{dark ? <Sun className="w-4 h-4 text-zinc-500" /> : <Moon className="w-4 h-4 text-zinc-500" />}</button>
           </header>
 
-          <div className="p-4 lg:p-6 pb-24 lg:pb-6">
-            {renderView()}
-          </div>
+          <div className="p-4 lg:p-6 pb-28 lg:pb-8">{renderView()}</div>
         </main>
       </div>
 
+      {/* Drawer Mobile */}
       {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setSidebarOpen(false)}>
-          <aside className="absolute right-0 top-0 bottom-0 w-72 bg-white dark:bg-slate-900 p-5" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                  {auth.profile.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
-                </div>
-                <div>
-                  <p className="text-sm font-bold">{auth.profile.name}</p>
-                  <p className="text-xs text-slate-500">{auth.profile.email}</p>
-                </div>
+        <div className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)}>
+          <aside className="absolute right-0 top-0 bottom-0 w-72 bg-white dark:bg-zinc-900 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 border-b border-zinc-100 dark:border-zinc-800">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs font-bold">{auth.profile.name.split(' ').map(n => n[0]).slice(0, 2).join('')}</div>
+                <div><p className="text-sm font-bold text-zinc-900 dark:text-white">{auth.profile.name}</p><p className="text-xs text-zinc-400 truncate max-w-[140px]">{auth.profile.email}</p></div>
               </div>
-              <button onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>
+              <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"><X className="w-4 h-4 text-zinc-500" /></button>
             </div>
-            <nav className="space-y-1">
+            <nav className="p-3 space-y-0.5">
               {navItems.map(item => (
                 <button key={item.id} onClick={() => { setView(item.id); setSidebarOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold ${view === item.id ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700' : 'text-slate-600 dark:text-slate-300'}`}>
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-sm font-semibold transition-all ${view === item.id ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}>
+                  <item.icon className="w-4 h-4" />{item.label}
                 </button>
               ))}
             </nav>
-            <button onClick={auth.signOut} className="mt-6 w-full flex items-center justify-center gap-2 text-sm font-semibold text-red-600 py-2.5 rounded-xl bg-red-50 dark:bg-red-900/20">
-              <LogOut className="w-4 h-4" /> Sair
-            </button>
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-zinc-100 dark:border-zinc-800">
+              <button onClick={auth.signOut} className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-red-500 py-3 rounded-2xl bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"><LogOut className="w-4 h-4" /> Sair da conta</button>
+            </div>
           </aside>
         </div>
       )}
 
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800">
-        <div className="grid grid-cols-5">
+      {/* Bottom Nav Mobile */}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-100 dark:border-zinc-800 px-2 py-1">
+        <div className="grid grid-cols-5 max-w-sm mx-auto">
           {navItems.slice(0, 5).map(item => (
             <button key={item.id} onClick={() => setView(item.id)}
-              className={`flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition ${view === item.id ? 'text-emerald-600' : 'text-slate-500'}`}>
-              <item.icon className="w-5 h-5" />
-              <span className="truncate max-w-full px-1">{item.label}</span>
+              className={`flex flex-col items-center gap-1 py-2 px-1 rounded-2xl transition-all ${view === item.id ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400 dark:text-zinc-500'}`}>
+              <div className={`p-1.5 rounded-xl transition-all ${view === item.id ? 'bg-emerald-50 dark:bg-emerald-500/15' : ''}`}><item.icon className="w-5 h-5" /></div>
+              <span className="text-[9px] font-semibold leading-none">{item.label}</span>
             </button>
           ))}
         </div>
