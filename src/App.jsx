@@ -18,6 +18,10 @@ import { useAuth, useUserData, useAdmin } from './useSupabase';
 // UTILITÁRIOS
 // =====================================================
 const brl = (n) => (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const parseMoney = (v) => {
+  if (typeof v === 'number') return v;
+  return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0;
+};
 const fmtDate = (d) => new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
 const monthKey = (d) => {
   const x = new Date(d);
@@ -532,10 +536,11 @@ const TransactionModal = ({ data, categories, accounts, onClose, onSave }) => {
 
   const submit = (e) => {
     e.preventDefault();
-    if (!form.amount || +form.amount <= 0) return alert('Informe um valor válido.');
+    const parsed = parseMoney(form.amount);
+    if (!parsed || parsed <= 0) return alert('Informe um valor válido.');
     if (!form.category_id) return alert('Selecione uma categoria.');
     if (!form.account_id) return alert('Selecione uma conta.');
-    onSave({ ...form, amount: +form.amount });
+    onSave({ ...form, amount: parsed });
   };
 
   return (
@@ -551,7 +556,19 @@ const TransactionModal = ({ data, categories, accounts, onClose, onSave }) => {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Input label="Valor (R$)" type="number" step="0.01" min="0" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} placeholder="0,00" />
+          {/* CORRIGIDO: aceita vírgula e ponto */}
+          <Input
+            label="Valor (R$)"
+            type="text"
+            inputMode="decimal"
+            value={form.amount}
+            onChange={e => {
+              const v = e.target.value.replace(/[^0-9,\.]/g, '');
+              setForm({ ...form, amount: v });
+            }}
+            onBlur={e => setForm({ ...form, amount: parseMoney(e.target.value) })}
+            placeholder="0,00"
+          />
           <Input label="Data" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
         </div>
 
@@ -704,7 +721,7 @@ const AccountsView = ({ accounts, onSave, onDelete, onTransfer, canTransfer }) =
           }}>
             <ArrowRightLeft className="w-4 h-4" /> Transferir
           </Button>
-          <Button onClick={() => setModal({ name: '', type: 'wallet', balance: 0 })}>
+          <Button onClick={() => setModal({ name: '', type: 'wallet', balance: '' })}>
             <Plus className="w-4 h-4" /> Nova
           </Button>
         </div>
@@ -742,10 +759,26 @@ const AccountsView = ({ accounts, onSave, onDelete, onTransfer, canTransfer }) =
               <option value="card">Cartão</option>
               <option value="pix">Pix</option>
             </Select>
-            <Input label="Saldo inicial (R$)" type="number" step="0.01" value={modal.balance} onChange={e => setModal({ ...modal, balance: +e.target.value })} />
+            {/* CORRIGIDO: aceita vírgula e ponto */}
+            <Input
+              label="Saldo inicial (R$)"
+              type="text"
+              inputMode="decimal"
+              value={modal.balance}
+              onChange={e => {
+                const v = e.target.value.replace(/[^0-9,\.\-]/g, '');
+                setModal({ ...modal, balance: v });
+              }}
+              onBlur={e => setModal({ ...modal, balance: parseMoney(e.target.value) })}
+              placeholder="0,00"
+            />
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => setModal(null)}>Cancelar</Button>
-              <Button className="flex-1" onClick={() => { if (!modal.name) return alert('Informe o nome.'); onSave(modal); setModal(null); }}>Salvar</Button>
+              <Button className="flex-1" onClick={() => {
+                if (!modal.name) return alert('Informe o nome.');
+                onSave({ ...modal, balance: parseMoney(modal.balance) });
+                setModal(null);
+              }}>Salvar</Button>
             </div>
           </div>
         </Modal>
@@ -761,13 +794,26 @@ const AccountsView = ({ accounts, onSave, onDelete, onTransfer, canTransfer }) =
             <Select label="Para" value={tModal.toId} onChange={e => setTModal({ ...tModal, toId: e.target.value })}>
               {accounts.map(a => <option key={a.id} value={a.id}>{a.name} — {brl(a.balance)}</option>)}
             </Select>
-            <Input label="Valor (R$)" type="number" step="0.01" value={tModal.amount} onChange={e => setTModal({ ...tModal, amount: e.target.value })} placeholder="0,00" />
+            {/* CORRIGIDO: aceita vírgula e ponto */}
+            <Input
+              label="Valor (R$)"
+              type="text"
+              inputMode="decimal"
+              value={tModal.amount}
+              onChange={e => {
+                const v = e.target.value.replace(/[^0-9,\.]/g, '');
+                setTModal({ ...tModal, amount: v });
+              }}
+              onBlur={e => setTModal({ ...tModal, amount: parseMoney(e.target.value) })}
+              placeholder="0,00"
+            />
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1" onClick={() => setTModal(null)}>Cancelar</Button>
               <Button className="flex-1" onClick={() => {
-                if (!+tModal.amount || +tModal.amount <= 0) return alert('Valor inválido.');
+                const val = parseMoney(tModal.amount);
+                if (!val || val <= 0) return alert('Valor inválido.');
                 if (tModal.fromId === tModal.toId) return alert('Selecione contas diferentes.');
-                onTransfer(tModal.fromId, tModal.toId, +tModal.amount);
+                onTransfer(tModal.fromId, tModal.toId, val);
                 setTModal(null);
               }}>Transferir</Button>
             </div>
@@ -1114,7 +1160,6 @@ export default function App() {
   const [view, setView] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Loading inicial
   if (auth.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
@@ -1123,12 +1168,10 @@ export default function App() {
     );
   }
 
-  // Não logado
   if (!auth.user) {
     return <AuthScreen onLogin={auth.signIn} onRegister={auth.signUp} onReset={auth.resetPassword} />;
   }
 
-  // Carregando dados do usuário
   if (data.loading || !auth.profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
@@ -1140,7 +1183,6 @@ export default function App() {
     );
   }
 
-  // Conta bloqueada
   if (!auth.profile.active) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950">
@@ -1193,7 +1235,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors">
       <div className="flex">
-        {/* Sidebar desktop */}
         <aside className="hidden lg:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 min-h-screen sticky top-0 p-5">
           <div className="flex items-center gap-2 mb-8">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
@@ -1234,7 +1275,6 @@ export default function App() {
         </aside>
 
         <main className="flex-1 min-w-0">
-          {/* Header mobile */}
           <header className="lg:hidden sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-600 flex items-center justify-center">
@@ -1255,7 +1295,6 @@ export default function App() {
             </div>
           </header>
 
-          {/* Header desktop */}
           <header className="hidden lg:flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800">
             <h1 className="text-lg font-bold">{navItems.find(n => n.id === view)?.label}</h1>
             <div className="flex items-center gap-2">
@@ -1271,7 +1310,6 @@ export default function App() {
         </main>
       </div>
 
-      {/* Drawer mobile */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setSidebarOpen(false)}>
           <aside className="absolute right-0 top-0 bottom-0 w-72 bg-white dark:bg-slate-900 p-5" onClick={e => e.stopPropagation()}>
@@ -1303,7 +1341,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Bottom Nav mobile */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800">
         <div className="grid grid-cols-5">
           {navItems.slice(0, 5).map(item => (
