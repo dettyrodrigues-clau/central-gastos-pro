@@ -693,6 +693,126 @@ const AccountsView = ({ accounts, onSave, onDelete, onTransfer, canTransfer }) =
 };
 
 // =====================================================
+// SANKEY CHART — Fluxo de dinheiro
+// =====================================================
+const SankeyChart = ({ transactions, categories }) => {
+  const income = transactions.filter(t => t.type === 'income').reduce((s, t) => s + +t.amount, 0);
+  const expense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0);
+
+  const catExpenses = categories.map(c => ({
+    name: c.name, color: c.color,
+    amount: transactions.filter(t => t.type === 'expense' && t.category_id === c.id).reduce((s, t) => s + +t.amount, 0)
+  })).filter(c => c.amount > 0).sort((a, b) => b.amount - a.amount).slice(0, 6);
+
+  const saving = Math.max(0, income - expense);
+  const targets = [
+    ...catExpenses.map(c => ({ name: c.name, amount: c.amount, color: c.color })),
+    ...(saving > 0 ? [{ name: 'Saldo', amount: saving, color: '#10b981' }] : [])
+  ];
+  const total = targets.reduce((s, t) => s + t.amount, 0);
+
+  if (total === 0 || targets.length === 0) {
+    return <div className="py-8 text-center text-sm text-zinc-400">Adicione lançamentos para ver o fluxo</div>;
+  }
+
+  const W = 340, H = Math.max(180, targets.length * 36 + 20);
+  const nodeW = 14, pad = 10;
+  const lx = 8, rx = W - nodeW - 90;
+  const totalH = H - 20 - pad * (targets.length - 1);
+
+  let ty = 10;
+  const tNodes = targets.map(t => {
+    const h = Math.max(18, (t.amount / total) * totalH);
+    const n = { ...t, y: ty, h };
+    ty += h + pad;
+    return n;
+  });
+
+  const usedSrcH = tNodes.reduce((s, n) => s + n.h, 0) + pad * (targets.length - 1);
+  const srcY = 10;
+
+  let srcOffset = 0;
+  const srcSegs = tNodes.map(t => {
+    const h = (t.amount / total) * usedSrcH;
+    const seg = { y1: srcY + srcOffset, y2: srcY + srcOffset + h, color: t.color };
+    srcOffset += h;
+    return seg;
+  });
+
+  const medals = ['🥇', '🥈', '🥉'];
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ minWidth: 280, overflow: 'visible' }}>
+        {/* Source node */}
+        {srcSegs.map((seg, i) => (
+          <rect key={i} x={lx} y={seg.y1} width={nodeW} height={Math.max(1, seg.y2 - seg.y1)}
+            fill={seg.color} fillOpacity={0.85}
+            rx={i === 0 ? 4 : 0}
+            style={{ borderRadius: i === srcSegs.length - 1 ? '0 0 4px 4px' : undefined }} />
+        ))}
+        <text x={lx - 4} y={srcY + usedSrcH / 2} textAnchor="end" dominantBaseline="middle"
+          fontSize="10" fill="#71717a" fontWeight="700">Entradas</text>
+
+        {/* Paths + target nodes */}
+        {tNodes.map((t, i) => {
+          const seg = srcSegs[i];
+          const cx = lx + nodeW + (rx - lx - nodeW) * 0.55;
+          const d = `M${lx + nodeW},${seg.y1} C${cx},${seg.y1} ${cx},${t.y} ${rx},${t.y} L${rx},${t.y + t.h} C${cx},${t.y + t.h} ${cx},${seg.y2} ${lx + nodeW},${seg.y2} Z`;
+          const midY = t.y + t.h / 2;
+          return (
+            <g key={i}>
+              <path d={d} fill={t.color} fillOpacity={0.2} />
+              <rect x={rx} y={t.y} width={nodeW} height={t.h} rx={4} fill={t.color} fillOpacity={0.85} />
+              <text x={rx + nodeW + 7} y={midY - (t.h > 26 ? 6 : 0)} dominantBaseline="middle"
+                fontSize="10" fill="#3f3f46" fontWeight="600"
+                className="dark:fill-zinc-300">
+                {i < 3 ? medals[i] + ' ' : ''}{t.name}
+              </text>
+              {t.h > 22 && (
+                <text x={rx + nodeW + 7} y={midY + 8} dominantBaseline="middle"
+                  fontSize="9" fill="#a1a1aa">
+                  {brl(t.amount)}
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+};
+
+// DonutChart com valor no centro
+const DonutChart = ({ data, total }) => {
+  const [hovered, setHovered] = useState(null);
+  if (data.length === 0) return <EmptyState icon={BarChart3} title="Sem dados" description="Nenhuma despesa no período." />;
+  return (
+    <div className="relative">
+      <ResponsiveContainer width="100%" height={220}>
+        <PieChart>
+          <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%"
+            innerRadius={60} outerRadius={90} paddingAngle={2}
+            onMouseEnter={(_, i) => setHovered(i)}
+            onMouseLeave={() => setHovered(null)}>
+            {data.map((c, i) => (
+              <Cell key={i} fill={c.color} opacity={hovered === null || hovered === i ? 1 : 0.5} />
+            ))}
+          </Pie>
+          <Tooltip formatter={(v) => brl(v)} contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }} />
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="text-center">
+          <p className="text-xs text-zinc-400 font-medium">Total</p>
+          <p className="text-base font-black text-zinc-900 dark:text-white tabular-nums">{brl(total)}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================================================
 // RELATÓRIOS
 // =====================================================
 const ReportsView = ({ transactions, categories, canExport }) => {
@@ -707,10 +827,24 @@ const ReportsView = ({ transactions, categories, canExport }) => {
       return true;
     });
   }, [transactions, period]);
+
   const income = filtered.filter(t => t.type === 'income').reduce((s, t) => s + +t.amount, 0);
   const expense = filtered.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0);
-  const byCategory = categories.map(c => ({ name: c.name, value: filtered.filter(t => t.type === 'expense' && t.category_id === c.id).reduce((s, t) => s + +t.amount, 0), color: c.color })).filter(c => c.value > 0);
-  const byMonth = useMemo(() => { const map = {}; filtered.forEach(t => { const k = monthKey(t.date); if (!map[k]) map[k] = { month: monthLabel(k), entradas: 0, saidas: 0 }; if (t.type === 'income') map[k].entradas += +t.amount; else map[k].saidas += +t.amount; }); return Object.values(map); }, [filtered]);
+  const byCategory = categories.map(c => ({
+    name: c.name, color: c.color,
+    value: filtered.filter(t => t.type === 'expense' && t.category_id === c.id).reduce((s, t) => s + +t.amount, 0)
+  })).filter(c => c.value > 0).sort((a, b) => b.value - a.value);
+
+  const byMonth = useMemo(() => {
+    const map = {};
+    filtered.forEach(t => {
+      const k = monthKey(t.date);
+      if (!map[k]) map[k] = { month: monthLabel(k), entradas: 0, saidas: 0 };
+      if (t.type === 'income') map[k].entradas += +t.amount; else map[k].saidas += +t.amount;
+    });
+    return Object.values(map);
+  }, [filtered]);
+
   const exportCSV = () => {
     if (!canExport) return alert('Exportação é exclusiva do plano Pro.');
     const headers = ['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor'];
@@ -720,54 +854,140 @@ const ReportsView = ({ transactions, categories, canExport }) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `relatorio-cgpro-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(url);
   };
+
+  const medals = ['🥇', '🥈', '🥉'];
+
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div><h2 className="text-2xl font-black text-zinc-900 dark:text-white">Relatórios</h2><p className="text-sm text-zinc-400">Analise seus gastos</p></div>
+        <div><h2 className="text-2xl font-black text-zinc-900 dark:text-white">Relatórios</h2><p className="text-sm text-zinc-400">Analise seus gastos em detalhes</p></div>
         <div className="flex gap-2 flex-wrap">
-          <Select value={period} onChange={e => setPeriod(e.target.value)} className="!w-auto"><option value="month">Este mês</option><option value="3m">Últimos 3 meses</option><option value="year">Este ano</option><option value="all">Todo o período</option></Select>
+          <Select value={period} onChange={e => setPeriod(e.target.value)} className="!w-auto">
+            <option value="month">Este mês</option><option value="3m">Últimos 3 meses</option>
+            <option value="year">Este ano</option><option value="all">Todo o período</option>
+          </Select>
           <Button variant="outline" onClick={exportCSV}><Download className="w-4 h-4" /> CSV {!canExport && <Crown className="w-3 h-3" />}</Button>
         </div>
       </div>
+
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <StatCard title="Entradas" value={brl(income)} icon={TrendingUp} color="emerald" />
         <StatCard title="Saídas" value={brl(expense)} icon={TrendingDown} color="red" />
         <StatCard title="Resultado" value={brl(income - expense)} icon={Wallet} color={income - expense >= 0 ? 'emerald' : 'red'} />
       </div>
+
+      {/* SANKEY — Fluxo de dinheiro */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-bold text-zinc-900 dark:text-white">Fluxo de dinheiro</h3>
+            <p className="text-xs text-zinc-400 mt-0.5">Como seu dinheiro foi distribuído</p>
+          </div>
+          <div className="flex items-center gap-1.5 bg-purple-50 dark:bg-purple-500/10 px-3 py-1 rounded-full">
+            <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+            <span className="text-xs font-bold text-purple-600 dark:text-purple-400">Exclusivo</span>
+          </div>
+        </div>
+        <SankeyChart transactions={filtered} categories={categories} />
+      </Card>
+
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="p-5">
           <h3 className="font-bold text-zinc-900 dark:text-white mb-4">Gastos por categoria</h3>
-          {byCategory.length === 0 ? <EmptyState icon={BarChart3} title="Sem dados" description="Nenhuma despesa no período." /> : (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart><Pie data={byCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={2}>{byCategory.map((c, i) => <Cell key={i} fill={c.color} />)}</Pie><Tooltip formatter={(v) => brl(v)} contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }} /></PieChart>
-            </ResponsiveContainer>
-          )}
+          <DonutChart data={byCategory} total={expense} />
         </Card>
+
         <Card className="p-5">
           <h3 className="font-bold text-zinc-900 dark:text-white mb-4">Entradas vs Saídas</h3>
           {byMonth.length === 0 ? <EmptyState icon={BarChart3} title="Sem dados" description="Nenhum lançamento no período." /> : (
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={220}>
               <BarChart data={byMonth} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" opacity={0.3} />
                 <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: '#a1a1aa' }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ borderRadius: 16, border: 'none', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }} formatter={(v) => brl(v)} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="entradas" fill="#10b981" radius={[8, 8, 0, 0]} /><Bar dataKey="saidas" fill="#ef4444" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="entradas" fill="#10b981" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="saidas" fill="#ef4444" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </Card>
       </div>
+
+      {/* Ranking com medalhas */}
       <Card className="p-5">
-        <h3 className="font-bold text-zinc-900 dark:text-white mb-4">Ranking por categoria</h3>
+        <h3 className="font-bold text-zinc-900 dark:text-white mb-4">🏆 Ranking de gastos</h3>
         <div className="space-y-3">
-          {byCategory.sort((a, b) => b.value - a.value).map((c, i) => { const pct = expense > 0 ? (c.value / expense) * 100 : 0; return (
-            <div key={i}><div className="flex items-center justify-between text-sm mb-1.5"><div className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color }} /><span className="font-semibold text-zinc-700 dark:text-zinc-300">{c.name}</span></div><span className="text-zinc-400 tabular-nums">{brl(c.value)} · {pct.toFixed(1)}%</span></div><div className="h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: c.color }} /></div></div>
-          ); })}
           {byCategory.length === 0 && <p className="text-sm text-zinc-400 text-center py-4">Sem dados para exibir.</p>}
+          {byCategory.map((c, i) => {
+            const pct = expense > 0 ? (c.value / expense) * 100 : 0;
+            return (
+              <div key={i} className={`p-3 rounded-2xl ${i === 0 ? 'bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20' : i === 1 ? 'bg-zinc-50 dark:bg-zinc-800/50' : i === 2 ? 'bg-orange-50 dark:bg-orange-500/10' : ''}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">{medals[i] || `${i + 1}º`}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.color }} />
+                      <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{c.name}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-zinc-900 dark:text-white tabular-nums">{brl(c.value)}</span>
+                    <span className="text-xs text-zinc-400 ml-1">{pct.toFixed(1)}%</span>
+                  </div>
+                </div>
+                <div className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: c.color }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </Card>
+
+      {/* Resumo diário — últimos 7 dias */}
+      {(() => {
+        const last7 = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          const key = d.toISOString().slice(0, 10);
+          const dayTx = transactions.filter(t => t.date === key);
+          const dayExp = dayTx.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0);
+          last7.push({ label: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''), date: key, expense: dayExp, hasData: dayTx.length > 0 });
+        }
+        const maxExp = Math.max(...last7.map(d => d.expense), 1);
+        return (
+          <Card className="p-5">
+            <h3 className="font-bold text-zinc-900 dark:text-white mb-4">📅 Últimos 7 dias</h3>
+            <div className="flex items-end justify-between gap-1.5 h-24">
+              {last7.map((d, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                  <div className="w-full flex items-end justify-center" style={{ height: 64 }}>
+                    <div
+                      className="w-full rounded-xl transition-all duration-500"
+                      style={{
+                        height: d.expense > 0 ? `${Math.max(8, (d.expense / maxExp) * 64)}px` : '4px',
+                        backgroundColor: d.expense > 0 ? '#ef4444' : '#e4e4e7',
+                        opacity: d.expense > 0 ? 0.8 : 0.3,
+                      }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-semibold text-zinc-400 capitalize">{d.label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
+              <span>Menor dia: {brl(Math.min(...last7.filter(d => d.expense > 0).map(d => d.expense)) || 0)}</span>
+              <span>Maior dia: {brl(Math.max(...last7.map(d => d.expense)))}</span>
+            </div>
+          </Card>
+        );
+      })()}
     </div>
   );
 };
