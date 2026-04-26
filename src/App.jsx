@@ -20,7 +20,10 @@ import { useAuth, useUserData, useAdmin } from './useSupabase';
 const brl = (n) => (n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const parseMoney = (v) => {
   if (typeof v === 'number') return v;
-  return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0;
+  const s = String(v).trim();
+  if (s.includes(',') && s.includes('.')) return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+  if (s.includes(',')) return parseFloat(s.replace(',', '.')) || 0;
+  return parseFloat(s) || 0;
 };
 const fmtDate = (d) => new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
 const monthKey = (d) => {
