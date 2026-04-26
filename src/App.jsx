@@ -1064,6 +1064,187 @@ const SettingsView = ({ profile, onUpdate, dark, toggleDark }) => {
 };
 
 // =====================================================
+// IA FINANCEIRA SIMULADA
+// =====================================================
+const AIChatButton = ({ transactions, accounts, categories }) => {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState([
+    { from: 'ai', text: 'Olá! 👋 Sou sua assistente financeira. Pergunte sobre seus gastos, saldo ou categorias!' }
+  ]);
+  const bottomRef = React.useRef(null);
+
+  useEffect(() => {
+    if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, open]);
+
+  const now = new Date();
+  const thisMonth = monthKey(now);
+  const monthTx = transactions.filter(t => monthKey(t.date) === thisMonth);
+  const income = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + +t.amount, 0);
+  const expense = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0);
+  const balance = accounts.reduce((s, a) => s + +a.balance, 0);
+
+  const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekTx = transactions.filter(t => new Date(t.date + 'T00:00:00') >= weekAgo);
+  const weekExpense = weekTx.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0);
+
+  const prevWeekStart = new Date(now); prevWeekStart.setDate(prevWeekStart.getDate() - 14);
+  const prevWeekEnd = new Date(now); prevWeekEnd.setDate(prevWeekEnd.getDate() - 7);
+  const prevWeekTx = transactions.filter(t => {
+    const d = new Date(t.date + 'T00:00:00');
+    return d >= prevWeekStart && d < prevWeekEnd;
+  });
+  const prevWeekExpense = prevWeekTx.filter(t => t.type === 'expense').reduce((s, t) => s + +t.amount, 0);
+
+  const catRanking = categories.map(c => ({
+    name: c.name,
+    total: monthTx.filter(t => t.type === 'expense' && t.category_id === c.id).reduce((s, t) => s + +t.amount, 0)
+  })).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
+
+  const recentTx = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+
+  const getAnswer = (q) => {
+    const lq = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    if (/saldo|quanto tenho|dinheiro/.test(lq))
+      return `💰 Seu saldo total atual é **${brl(balance)}**. ${balance >= 0 ? 'Você está no positivo! 🎉' : 'Atenção: saldo negativo! ⚠️'}`;
+
+    if (/gast.*mes|mes.*gast|despesa.*mes|saida.*mes/.test(lq))
+      return `📊 Você gastou **${brl(expense)}** neste mês. ${income > 0 ? `Suas entradas foram ${brl(income)}, resultando em ${income > expense ? '✅ saldo positivo' : '⚠️ saldo negativo'} de ${brl(Math.abs(income - expense))}.` : 'Ainda não há entradas registradas este mês.'}`;
+
+    if (/entrada|receita|ganh|salario/.test(lq))
+      return `📈 Suas entradas neste mês somam **${brl(income)}**. ${income === 0 ? 'Nenhuma entrada registrada ainda. Que tal adicionar seu salário?' : 'Continue assim! 💪'}`;
+
+    if (/categoria|onde.*mais|mais.*gast|maior gasto/.test(lq)) {
+      if (catRanking.length === 0) return '🤔 Ainda não há gastos categorizados este mês.';
+      const top = catRanking[0];
+      const pct = expense > 0 ? ((top.total / expense) * 100).toFixed(1) : 0;
+      return `🏆 Sua maior categoria este mês é **${top.name}** com **${brl(top.total)}** (${pct}% dos seus gastos). ${catRanking.length > 1 ? `Em seguida: ${catRanking[1].name} (${brl(catRanking[1].total)}).` : ''}`;
+    }
+
+    if (/semana.*passada|semana.*anterior|compar/.test(lq)) {
+      const diff = weekExpense - prevWeekExpense;
+      const pct = prevWeekExpense > 0 ? Math.abs((diff / prevWeekExpense) * 100).toFixed(0) : null;
+      if (prevWeekExpense === 0) return `📅 Esta semana você gastou **${brl(weekExpense)}**. Não há dados da semana anterior para comparar.`;
+      return `📅 Esta semana: **${brl(weekExpense)}** | Semana passada: **${brl(prevWeekExpense)}**\n${diff > 0 ? `⬆️ Você gastou ${pct}% a mais esta semana.` : `⬇️ Ótimo! Você gastou ${pct}% a menos esta semana! 🎉`}`;
+    }
+
+    if (/semana|7 dias|ultimos dias/.test(lq))
+      return `📅 Nos últimos 7 dias você gastou **${brl(weekExpense)}**. ${weekExpense > 200 ? 'Fique de olho nos gastos! 👀' : 'Ótimo controle! 💪'}`;
+
+    if (/ultimo.*lanc|recente|ultim/.test(lq)) {
+      if (recentTx.length === 0) return '📝 Nenhum lançamento encontrado ainda.';
+      const lista = recentTx.map(t => `• ${t.description || 'Sem descrição'} — ${brl(t.amount)} (${fmtDate(t.date)})`).join('\n');
+      return `📝 Seus últimos lançamentos:\n${lista}`;
+    }
+
+    if (/quantas.*conta|numero.*conta|contas/.test(lq))
+      return `🏦 Você tem **${accounts.length} conta${accounts.length !== 1 ? 's' : ''}** cadastrada${accounts.length !== 1 ? 's' : ''}. ${accounts.map(a => `${a.name}: ${brl(a.balance)}`).join(', ')}.`;
+
+    if (/economiz|poupar|sobr/.test(lq)) {
+      const saving = income - expense;
+      if (income === 0) return '💡 Adicione suas entradas para ver quanto você está economizando!';
+      return saving > 0
+        ? `🎉 Parabéns! Você está economizando **${brl(saving)}** este mês (${((saving/income)*100).toFixed(1)}% da sua renda)!`
+        : `⚠️ Seus gastos estão **${brl(Math.abs(saving))}** acima das suas entradas este mês. Cuidado!`;
+    }
+
+    if (/oi|ola|hello|tudo|bom dia|boa tarde|boa noite/.test(lq))
+      return `👋 Olá! Tudo bem! Estou aqui pra te ajudar com suas finanças. Você pode me perguntar sobre:\n• Saldo total\n• Gastos do mês\n• Maior categoria\n• Últimos lançamentos\n• Comparativo semanal`;
+
+    if (/ajuda|o que (voce|vc) (faz|sabe)|como usar/.test(lq))
+      return `🤖 Posso responder sobre:\n• 💰 "Qual meu saldo?"\n• 📊 "Quanto gastei este mês?"\n• 🏆 "Onde gasto mais?"\n• 📅 "Como foi esta semana?"\n• 📝 "Meus últimos lançamentos"\n• 💡 "Estou economizando?"`;
+
+    return `🤔 Não entendi sua pergunta. Tente perguntar sobre:\n• Saldo, gastos do mês, categorias\n• Últimos lançamentos, comparativo semanal\n• Digite "ajuda" para ver o que posso responder!`;
+  };
+
+  const send = () => {
+    const text = input.trim();
+    if (!text) return;
+    const userMsg = { from: 'user', text };
+    const aiMsg = { from: 'ai', text: getAnswer(text) };
+    setMessages(prev => [...prev, userMsg, aiMsg]);
+    setInput('');
+  };
+
+  const suggestions = ['Qual meu saldo?', 'Quanto gastei este mês?', 'Onde gasto mais?'];
+
+  return (
+    <>
+      {/* Botão flutuante */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white shadow-2xl shadow-purple-500/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200"
+        title="Assistente financeiro"
+      >
+        {open ? <X className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
+      </button>
+
+      {/* Chat panel */}
+      {open && (
+        <div className="fixed bottom-44 right-4 lg:bottom-24 lg:right-6 z-50 w-80 max-w-[calc(100vw-2rem)]">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl shadow-black/20 border border-zinc-100 dark:border-zinc-800 overflow-hidden flex flex-col" style={{ maxHeight: 420 }}>
+            {/* Header */}
+            <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-500 to-blue-500">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Assistente Financeiro</p>
+                <p className="text-xs text-white/70">Análise dos seus dados</p>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-2.5" style={{ maxHeight: 260 }}>
+              {messages.map((m, i) => (
+                <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm whitespace-pre-line ${m.from === 'user'
+                    ? 'bg-gradient-to-br from-purple-500 to-blue-500 text-white rounded-br-sm'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-bl-sm'}`}
+                  >
+                    {m.text.replace(/\*\*(.*?)\*\*/g, '$1')}
+                  </div>
+                </div>
+              ))}
+              <div ref={bottomRef} />
+            </div>
+
+            {/* Sugestões rápidas */}
+            {messages.length <= 2 && (
+              <div className="px-3 pb-2 flex gap-1.5 flex-wrap">
+                {suggestions.map((s, i) => (
+                  <button key={i} onClick={() => { setInput(s); setTimeout(() => { setInput(''); setMessages(prev => [...prev, { from: 'user', text: s }, { from: 'ai', text: getAnswer(s) }]); }, 50); }}
+                    className="text-xs px-2.5 py-1.5 rounded-full bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 hover:bg-purple-100 transition-colors">
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Input */}
+            <div className="flex items-center gap-2 px-3 py-3 border-t border-zinc-100 dark:border-zinc-800">
+              <input
+                className="flex-1 text-sm px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-400/30"
+                placeholder="Digite sua pergunta..."
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && send()}
+              />
+              <button onClick={send} disabled={!input.trim()}
+                className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center disabled:opacity-40 hover:scale-105 transition-transform">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+// =====================================================
 // APP PRINCIPAL
 // =====================================================
 export default function App() {
@@ -1221,6 +1402,13 @@ export default function App() {
           ))}
         </div>
       </nav>
+
+      {/* Assistente IA Financeiro */}
+      <AIChatButton
+        transactions={data.transactions}
+        accounts={data.accounts}
+        categories={data.categories}
+      />
     </div>
   );
 }
