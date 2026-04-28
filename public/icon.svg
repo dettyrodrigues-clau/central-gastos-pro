@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
+  <!-- Shine overlay -->
+  <rect width="512" height="256" rx="110" fill="url(#shine)"/>
+  <!-- Decorative circle top right -->
+  <circle cx="420" cy="92" r="120" fill="#ffffff" fill-opacity="0.06"/>
+  <circle cx="420" cy="92" r="75" fill="#ffffff" fill-opacity="0.06"/>
+  <!-- Chart bars decoration -->
+  <rect x="72" y="340" width="44" height="90" rx="10" fill="#ffffff" fill-opacity="0.15"/>
+  <rect x="128" y="300" width="44" height="130" rx="10" fill="#ffffff" fill-opacity="0.15"/>
+  <rect x="184" y="320" width="44" height="110" rx="10" fill="#ffffff" fill-opacity="0.15"/>
+  <!-- Letter C -->
+  <path d="M 175 175 
+             A 105 105 0 1 0 175 337
+             L 175 300
+             A 68 68 0 1 1 175 212
+             Z" 
+        fill="#ffffff"/>
+  <!-- Letter G -->
+  <path d="M 310 175
+             A 105 105 0 1 0 415 280
+             L 415 280
+             L 415 256
+             L 340 256
+             L 340 293
+             L 378 293
+             A 68 68 0 1 1 347 212
+             Z"
+        fill="#ffffff"/>
+  <!-- PRO badge -->
+  <rect x="340" y="390" width="110" height="42" rx="21" fill="#ffffff" fill-opacity="0.25"/>
+  <text x="395" y="419" font-family="Arial Black, sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="3">PRO</text>
+</svg>
