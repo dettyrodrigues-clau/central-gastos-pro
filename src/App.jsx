@@ -311,7 +311,7 @@ const AuthScreen = ({ onLogin, onRegister, onReset }) => {
 // =====================================================
 // DASHBOARD
 // =====================================================
-const Dashboard = ({ transactions, accounts, categories, profile, setView }) => {
+const Dashboard = ({ transactions, accounts, categories, profile, setView, alerts }) => {
   const now = new Date();
   const thisMonth = monthKey(now);
   const monthTx = transactions.filter(t => monthKey(t.date) === thisMonth);
@@ -339,6 +339,9 @@ const Dashboard = ({ transactions, accounts, categories, profile, setView }) => 
   return (
     <div className="space-y-4">
       <HeroBalanceCard balance={balance} income={income} expense={expense} name={profile?.name} />
+
+      {/* 🔔 Alertas de gastos */}
+      <AlertsCard alerts={alerts} onManage={() => setView('settings')} />
 
       <div className="grid grid-cols-2 gap-3">
         <StatCard title="Resultado" value={brl(result)} icon={result >= 0 ? TrendingUp : TrendingDown} color={result >= 0 ? 'emerald' : 'red'} subtitle="este mês" />
@@ -1163,18 +1166,265 @@ const AdminView = ({ users, onUpdateUser }) => {
 };
 
 // =====================================================
+// SISTEMA DE ALERTAS DE GASTOS
+// =====================================================
+
+// Hook para calcular alertas
+const useAlerts = (transactions, categories, userId) => {
+  return useMemo(() => {
+    if (!userId || !transactions.length) return [];
+
+    const now = new Date();
+    const thisMonth = monthKey(now);
+    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonth = monthKey(lastMonthDate);
+
+    // Limites personalizados do localStorage
+    const customLimits = JSON.parse(localStorage.getItem(`limits_${userId}`) || '{}');
+
+    const alerts = [];
+
+    categories.forEach(cat => {
+      const thisMonthTotal = transactions
+        .filter(t => t.type === 'expense' && t.category_id === cat.id && monthKey(t.date) === thisMonth)
+        .reduce((s, t) => s + +t.amount, 0);
+
+      const lastMonthTotal = transactions
+        .filter(t => t.type === 'expense' && t.category_id === cat.id && monthKey(t.date) === lastMonth)
+        .reduce((s, t) => s + +t.amount, 0);
+
+      if (thisMonthTotal === 0) return;
+
+      // Alerta de limite personalizado
+      const customLimit = customLimits[cat.id];
+      if (customLimit && thisMonthTotal >= customLimit) {
+        const pct = ((thisMonthTotal / customLimit) * 100).toFixed(0);
+        alerts.push({
+          id: `custom_${cat.id}`,
+          type: thisMonthTotal >= customLimit * 1.2 ? 'critical' : 'warning',
+          category: cat,
+          message: `${cat.name}: ${brl(thisMonthTotal)} de ${brl(customLimit)} limite`,
+          detail: `${pct}% do limite usado`,
+          pct: Math.min(100, (thisMonthTotal / customLimit) * 100),
+        });
+        return;
+      }
+
+      // Alerta automático — 30% acima do mês passado
+      if (lastMonthTotal > 0) {
+        const increase = ((thisMonthTotal - lastMonthTotal) / lastMonthTotal) * 100;
+        if (increase >= 30) {
+          alerts.push({
+            id: `auto_${cat.id}`,
+            type: increase >= 60 ? 'critical' : 'warning',
+            category: cat,
+            message: `${cat.name}: ${brl(thisMonthTotal)} este mês`,
+            detail: `+${increase.toFixed(0)}% vs mês passado (${brl(lastMonthTotal)})`,
+            pct: Math.min(100, (thisMonthTotal / lastMonthTotal) * 100 - 100),
+          });
+        }
+      }
+    });
+
+    return alerts.sort((a, b) => (b.type === 'critical' ? 1 : 0) - (a.type === 'critical' ? 1 : 0));
+  }, [transactions, categories, userId]);
+};
+
+// Card de alertas no Dashboard
+const AlertsCard = ({ alerts, onManage }) => {
+  if (!alerts.length) return null;
+  const critical = alerts.filter(a => a.type === 'critical');
+  const warnings = alerts.filter(a => a.type === 'warning');
+
+  return (
+    <Card className="overflow-hidden border-red-200 dark:border-red-500/30">
+      <div className={`px-4 py-3 flex items-center justify-between ${critical.length ? 'bg-red-50 dark:bg-red-500/10' : 'bg-amber-50 dark:bg-amber-500/10'}`}>
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{critical.length ? '🚨' : '⚠️'}</span>
+          <div>
+            <p className={`text-sm font-bold ${critical.length ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'}`}>
+              {critical.length ? `${critical.length} alerta${critical.length > 1 ? 's' : ''} crítico${critical.length > 1 ? 's' : ''}` : `${warnings.length} aviso${warnings.length > 1 ? 's' : ''} de gasto`}
+            </p>
+            <p className="text-xs text-zinc-500">{alerts.length} categoria{alerts.length > 1 ? 's' : ''} acima do limite</p>
+          </div>
+        </div>
+        <button onClick={onManage} className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+          Gerenciar
+        </button>
+      </div>
+      <div className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+        {alerts.slice(0, 3).map(a => {
+          const Icon = CAT_ICONS[a.category.icon] || Tag;
+          return (
+            <div key={a.id} className="flex items-center gap-3 px-4 py-3">
+              <div className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: a.category.color + '20' }}>
+                <Icon className="w-4 h-4" style={{ color: a.category.color }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-white">{a.message}</p>
+                <p className="text-xs text-zinc-400">{a.detail}</p>
+              </div>
+              <span className={`text-xs font-bold px-2 py-1 rounded-full ${a.type === 'critical' ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'}`}>
+                {a.type === 'critical' ? 'Crítico' : 'Aviso'}
+              </span>
+            </div>
+          );
+        })}
+        {alerts.length > 3 && (
+          <div className="px-4 py-2.5 text-center text-xs text-zinc-400">
+            +{alerts.length - 3} mais alerta{alerts.length - 3 > 1 ? 's' : ''} — veja em Configurações
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+};
+
+// Modal de alerta ao abrir o app
+const AlertModal = ({ alerts, onClose }) => {
+  if (!alerts.length) return null;
+  const critical = alerts.filter(a => a.type === 'critical');
+  if (!critical.length) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white dark:bg-zinc-900 rounded-t-[2rem] sm:rounded-3xl w-full max-w-sm shadow-2xl border border-zinc-100 dark:border-zinc-800 overflow-hidden">
+        <div className="bg-gradient-to-br from-red-500 to-orange-500 p-6 text-white text-center">
+          <div className="text-4xl mb-2">🚨</div>
+          <h3 className="text-lg font-black">Atenção aos gastos!</h3>
+          <p className="text-sm text-white/80 mt-1">{critical.length} categoria{critical.length > 1 ? 's' : ''} com gasto crítico este mês</p>
+        </div>
+        <div className="p-5 space-y-3">
+          {critical.map(a => {
+            const Icon = CAT_ICONS[a.category.icon] || Tag;
+            return (
+              <div key={a.id} className="flex items-center gap-3 p-3 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: a.category.color + '20' }}>
+                  <Icon className="w-4 h-4" style={{ color: a.category.color }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{a.message}</p>
+                  <p className="text-xs text-zinc-500">{a.detail}</p>
+                </div>
+              </div>
+            );
+          })}
+          <Button className="w-full mt-2" onClick={onClose}>
+            Entendi, vou controlar! 💪
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================================================
 // CONFIGURAÇÕES
 // =====================================================
-const SettingsView = ({ profile, onUpdate, dark, toggleDark }) => {
+const SettingsView = ({ profile, onUpdate, dark, toggleDark, categories, userId }) => {
   const [form, setForm] = useState({ name: profile?.name || '', email: profile?.email || '' });
+  const [limits, setLimits] = useState(() => JSON.parse(localStorage.getItem(`limits_${userId}`) || '{}'));
+  const [editingLimits, setEditingLimits] = useState(false);
+  const [tempLimits, setTempLimits] = useState({});
+
+  const saveLimits = () => {
+    localStorage.setItem(`limits_${userId}`, JSON.stringify(tempLimits));
+    setLimits(tempLimits);
+    setEditingLimits(false);
+    alert('Limites salvos! ✅');
+  };
+
+  const startEdit = () => {
+    setTempLimits({ ...limits });
+    setEditingLimits(true);
+  };
+
   return (
     <div className="space-y-4 max-w-2xl">
       <div><h2 className="text-2xl font-black text-zinc-900 dark:text-white">Configurações</h2><p className="text-sm text-zinc-400">Gerencie sua conta</p></div>
+
       <Card className="p-5">
         <h3 className="font-bold text-zinc-900 dark:text-white mb-5">Perfil</h3>
         <div className="flex items-center gap-4 mb-5"><div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-emerald-500/20">{(profile?.name || '?').split(' ').map(n => n[0]).slice(0, 2).join('')}</div><div><p className="font-bold text-zinc-900 dark:text-white">{profile?.name}</p><Badge color={profile?.plan === 'pro' ? 'emerald' : profile?.plan === 'basic' ? 'blue' : 'zinc'}>Plano {PLANS.find(p => p.id === profile?.plan)?.name}</Badge></div></div>
         <div className="space-y-3"><Input label="Nome" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /><Input label="E-mail" value={form.email} disabled className="opacity-60" /><Button onClick={() => onUpdate({ name: form.name })}>Salvar alterações</Button></div>
       </Card>
+
+      {/* 🆕 Limites de gastos por categoria */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-bold text-zinc-900 dark:text-white">🔔 Limites de gastos</h3>
+            <p className="text-xs text-zinc-400 mt-0.5">Define um valor máximo por categoria. O app alerta quando ultrapassar.</p>
+          </div>
+          {!editingLimits && (
+            <Button size="sm" variant="outline" onClick={startEdit}>Editar</Button>
+          )}
+        </div>
+
+        {!editingLimits ? (
+          <div className="space-y-2">
+            {categories.filter(c => c.type !== 'income').map(cat => {
+              const Icon = CAT_ICONS[cat.icon] || Tag;
+              const limit = limits[cat.id];
+              return (
+                <div key={cat.id} className="flex items-center gap-3 py-2">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: cat.color + '20' }}>
+                    <Icon className="w-4 h-4" style={{ color: cat.color }} />
+                  </div>
+                  <span className="flex-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300">{cat.name}</span>
+                  {limit ? (
+                    <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{brl(limit)}</span>
+                  ) : (
+                    <span className="text-xs text-zinc-400">Sem limite (alerta automático)</span>
+                  )}
+                </div>
+              );
+            })}
+            {categories.filter(c => c.type !== 'income').length === 0 && (
+              <p className="text-sm text-zinc-400 text-center py-4">Crie categorias primeiro para definir limites.</p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                💡 Deixe o campo em branco para usar o alerta automático (30% acima do mês passado).
+              </p>
+            </div>
+            {categories.filter(c => c.type !== 'income').map(cat => {
+              const Icon = CAT_ICONS[cat.icon] || Tag;
+              return (
+                <div key={cat.id} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: cat.color + '20' }}>
+                    <Icon className="w-4 h-4" style={{ color: cat.color }} />
+                  </div>
+                  <span className="flex-1 text-sm font-semibold text-zinc-700 dark:text-zinc-300">{cat.name}</span>
+                  <input
+                    type="text" inputMode="decimal"
+                    placeholder="R$ limite"
+                    value={tempLimits[cat.id] || ''}
+                    onChange={e => {
+                      const v = e.target.value.replace(/[^0-9,\.]/g, '');
+                      setTempLimits(prev => ({ ...prev, [cat.id]: v || undefined }));
+                    }}
+                    onBlur={e => {
+                      const v = parseMoney(e.target.value);
+                      if (v > 0) setTempLimits(prev => ({ ...prev, [cat.id]: v }));
+                      else { const next = { ...tempLimits }; delete next[cat.id]; setTempLimits(next); }
+                    }}
+                    className="w-28 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm text-right focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+              );
+            })}
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setEditingLimits(false)}>Cancelar</Button>
+              <Button className="flex-1" onClick={saveLimits}>Salvar limites</Button>
+            </div>
+          </div>
+        )}
+      </Card>
+
       <Card className="p-5">
         <h3 className="font-bold text-zinc-900 dark:text-white mb-4">Aparência</h3>
         <button onClick={toggleDark} className="w-full flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors">
@@ -1377,6 +1627,9 @@ export default function App() {
   const admin = useAdmin(auth.profile?.role === 'admin');
   const [view, setView] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [alertModalDismissed, setAlertModalDismissed] = useState(false);
+
+  const alerts = useAlerts(data.transactions || [], data.categories || [], auth.user?.id);
 
   if (auth.loading) return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
@@ -1421,14 +1674,14 @@ export default function App() {
 
   const renderView = () => {
     switch (view) {
-      case 'dashboard':    return <Dashboard transactions={data.transactions} accounts={data.accounts} categories={data.categories} profile={auth.profile} setView={setView} />;
+      case 'dashboard':    return <Dashboard transactions={data.transactions} accounts={data.accounts} categories={data.categories} profile={auth.profile} setView={setView} alerts={alerts} />;
       case 'transactions': return <TransactionsView transactions={data.transactions} categories={data.categories} accounts={data.accounts} onSave={data.saveTransaction} onDelete={data.deleteTransaction} canAdd={canAddTransaction} />;
       case 'categories':   return <CategoriesView categories={data.categories} onSave={data.saveCategory} onDelete={data.deleteCategory} />;
       case 'accounts':     return <AccountsView accounts={data.accounts} onSave={data.saveAccount} onDelete={data.deleteAccount} onTransfer={data.transfer} canTransfer={canTransfer} />;
       case 'reports':      return <ReportsView transactions={data.transactions} categories={data.categories} canExport={canExport} />;
       case 'plans':        return <PlansView profile={auth.profile} onChangePlan={changePlan} />;
       case 'admin':        return <AdminView users={admin.users} onUpdateUser={admin.updateUser} />;
-      case 'settings':     return <SettingsView profile={auth.profile} onUpdate={auth.updateProfile} dark={dark} toggleDark={toggleDark} />;
+      case 'settings':     return <SettingsView profile={auth.profile} onUpdate={auth.updateProfile} dark={dark} toggleDark={toggleDark} categories={data.categories} userId={auth.user?.id} />;
       default:             return null;
     }
   };
@@ -1525,6 +1778,11 @@ export default function App() {
           ))}
         </div>
       </nav>
+
+      {/* 🔔 Modal de alerta crítico ao abrir */}
+      {!alertModalDismissed && (
+        <AlertModal alerts={alerts} onClose={() => setAlertModalDismissed(true)} />
+      )}
 
       {/* Assistente IA Financeiro */}
       <AIChatButton
