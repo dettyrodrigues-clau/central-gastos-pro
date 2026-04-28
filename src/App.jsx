@@ -1719,14 +1719,16 @@ export default function App() {
 
         <main className="flex-1 min-w-0">
           {/* Header Mobile */}
-          <header className="lg:hidden sticky top-0 z-30 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-800 px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center"><Wallet className="w-4 h-4 text-white" /></div>
-              <div><h1 className="text-sm font-black text-zinc-900 dark:text-white">Central de Gastos</h1><p className="text-[9px] font-bold text-emerald-500 tracking-widest">PRO</p></div>
-            </div>
-            <div className="flex items-center gap-1">
-              <button onClick={toggleDark} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">{dark ? <Sun className="w-4 h-4 text-zinc-500" /> : <Moon className="w-4 h-4 text-zinc-500" />}</button>
-              <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"><Menu className="w-5 h-5 text-zinc-500" /></button>
+          <header className="lg:hidden sticky top-0 z-30 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-b border-zinc-100 dark:border-zinc-800" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+            <div className="px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center"><Wallet className="w-4 h-4 text-white" /></div>
+                <div><h1 className="text-sm font-black text-zinc-900 dark:text-white">Central de Gastos</h1><p className="text-[9px] font-bold text-emerald-500 tracking-widest">PRO</p></div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={toggleDark} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">{dark ? <Sun className="w-4 h-4 text-zinc-500" /> : <Moon className="w-4 h-4 text-zinc-500" />}</button>
+                <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"><Menu className="w-5 h-5 text-zinc-500" /></button>
+              </div>
             </div>
           </header>
 
